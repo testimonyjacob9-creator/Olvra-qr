@@ -65,13 +65,14 @@ canvas{display:block;width:100%;height:auto;max-width:520px;margin:0 auto;border
 .about h2{font-size:1.5rem;font-weight:800;margin-bottom:10px}
 .about h3{font-size:1rem;font-weight:700;margin:18px 0 4px}
 .about p{color:var(--ink);max-width:70ch}
+.hr{display:flex;align-items:center;gap:18px}.navlink{color:var(--accent);font-weight:700;text-decoration:none;font-size:.9rem}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <header class="top">
   <a class="logo" href="/">olv<span>ra</span></a>
-  <button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button>
+  <div class="hr"><a class="navlink" href="/love">Send a love message</a><button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button></div>
 </header>
 <main class="app">
   <section>

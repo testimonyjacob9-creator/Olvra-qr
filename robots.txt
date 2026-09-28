@@ -1,3 +1,4 @@
 User-agent: *
 Allow: /
+Disallow: /l/
 Sitemap: https://olvra-qr.netlify.app/sitemap.xml

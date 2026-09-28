@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Send a Love Message with Animations – Olvra QR</title>
+<meta name="description" content="Write a love message, pick hearts, confetti or a typing animation, and share a private link on WhatsApp.">
+<link rel="canonical" href="https://olvra-qr.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+</head><body><div class="wrap">
+<a class="logo" href="/">olv<span>ra</span> QR</a>
+<h1>Send a love message</h1>
+<p class="sub">Write it, pick an animation, then share the private link on WhatsApp.</p>
+<div id="compose">
+  <label for="to">Who is it for?</label><input id="to" maxlength="40" placeholder="Amaka" autocomplete="off">
+  <label for="from">Your name</label><input id="from" maxlength="40" placeholder="Tobi" autocomplete="off">
+  <label for="msg">Your message <span class="count" id="cnt">0/600</span></label><textarea id="msg" maxlength="600" placeholder="Write from the heart..."></textarea>
+  <div class="lab">Animation</div>
+  <div class="seg" id="anims"><button data-a="hearts" aria-pressed="true">Hearts</button><button data-a="confetti" aria-pressed="false">Confetti</button><button data-a="typing" aria-pressed="false">Typing</button></div>
+  <div class="lab">Colours</div>
+  <div class="swatches" id="sws">
+    <button class="sw" data-i="0" aria-label="Indigo" aria-pressed="true" style="background:linear-gradient(135deg,#2b3cff,#8a4dff)"></button>
+    <button class="sw" data-i="1" aria-label="Ember" aria-pressed="false" style="background:linear-gradient(135deg,#ff8a3d,#ff3d6e)"></button>
+    <button class="sw" data-i="2" aria-label="Lagoon" aria-pressed="false" style="background:linear-gradient(135deg,#0fb5a6,#2b6cff)"></button>
+  </div>
+  <p id="err" role="alert"></p>
+  <div class="acts"><button class="btn pri" id="go">Create my link</button></div>
+</div>
+<div class="res" id="res" hidden>
+  <h2>Your link is ready</h2>
+  <input id="url" readonly aria-label="Your link">
+  <div class="acts"><button class="btn" id="copy">Copy link</button><a class="btn pri" id="wa" target="_blank" rel="noopener">Send on WhatsApp</a><button class="btn" id="share" hidden>Share</button></div>
+  <div class="acts"><button class="btn" id="again">Write another</button></div>
+</div>
+</div>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db=getFirestore(initializeApp({apiKey:"AIzaSyCnKefzZS3pMGfaxIIjsRClkmWjR4xpEWQ",authDomain:"olvrahub.firebaseapp.com",projectId:"olvrahub",storageBucket:"olvrahub.firebasestorage.app",messagingSenderId:"821545082724",appId:"1:821545082724:web:f20fe7965bf3dd3fede471"}));
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+let anim='hearts',theme=0;
+$$('#anims button').forEach(b=>b.onclick=()=>{anim=b.dataset.a;$$('#anims button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+$$('.sw').forEach(b=>b.onclick=()=>{theme=+b.dataset.i;$$('.sw').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+$('#msg').oninput=e=>$('#cnt').textContent=e.target.value.length+'/600';
+$('#go').onclick=async()=>{
+  const to=$('#to').value.trim(),from=$('#from').value.trim(),msg=$('#msg').value.trim(),err=$('#err');err.textContent='';
+  if(!to||!from||!msg){err.textContent='Fill in who it is for, your name and the message.';return}
+  const A='abcdefghjkmnpqrstuvwxyz23456789';
+  const id=Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>A[b%A.length]).join('');
+  $('#go').disabled=true;
+  try{
+    await setDoc(doc(db,'love',id),{to,from,msg,anim,theme,at:serverTimestamp()});
+    const url=location.origin+'/l/'+id;
+    $('#url').value=url;
+    $('#wa').href='https://wa.me/?text='+encodeURIComponent(from+' sent you a message 💌 '+url);
+    $('#share').hidden=!navigator.share;
+    $('#share').onclick=()=>navigator.share({title:'A message for you',text:from+' sent you a message 💌',url}).catch(()=>{});
+    $('#compose').hidden=true;$('#res').hidden=false;
+  }catch(e){err.textContent='Could not create the link. Check your connection and try again.'}
+  $('#go').disabled=false;
+};
+$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText($('#url').value);$('#copy').textContent='Copied'}catch(e){$('#url').select()}};
+$('#again').onclick=()=>{$('#res').hidden=true;$('#compose').hidden=false;$('#copy').textContent='Copy link'};
+</script></body></html>

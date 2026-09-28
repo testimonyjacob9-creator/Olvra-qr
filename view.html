@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A message for you – Olvra QR</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<style>
+body{color:#fff;background:linear-gradient(135deg,#2b3cff,#8a4dff);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
+.vcard{width:100%;max-width:480px;text-align:center;padding:36px 26px;border-radius:28px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.5);backdrop-filter:blur(22px) saturate(140%);-webkit-backdrop-filter:blur(22px) saturate(140%);box-shadow:0 20px 50px rgba(0,0,0,.2);position:relative;z-index:2}
+.env{font-size:64px;line-height:1}.vcard h1{margin:14px 0 6px}.vcard p{margin-bottom:6px}
+#text{font-size:1.15rem;line-height:1.7;white-space:pre-wrap;text-align:left;margin:4px 0 18px}
+#sig{font-weight:700;text-align:right}
+.vcard .btn{background:#fff;color:#1f2540;box-shadow:none;margin-top:18px}
+.rep{position:relative;z-index:2;margin-top:18px;background:none;border:0;color:rgba(255,255,255,.8);font:inherit;text-decoration:underline;cursor:pointer}
+.fl{position:fixed;bottom:-40px;pointer-events:none;animation:up linear forwards;z-index:1}
+.cf{position:fixed;top:-14px;width:9px;height:14px;pointer-events:none;animation:dn linear forwards;z-index:1}
+@keyframes up{to{transform:translateY(-115vh)}}@keyframes dn{to{transform:translateY(110vh) rotate(720deg)}}
+</style></head><body>
+<div id="fx"></div>
+<div class="vcard">
+  <div id="closed" hidden><div class="env">💌</div><h1 id="hi"></h1><p id="fromline"></p><button class="btn" id="open">Open message</button></div>
+  <div id="opened" hidden><p id="text"></p><p id="sig"></p><a class="btn" href="/love">Send one back</a></div>
+  <div id="gone" hidden><div class="env">🔍</div><h1>Message not found</h1><p>The link may be wrong, or the message was removed.</p><a class="btn" href="/love">Write a message</a></div>
+</div>
+<button class="rep" id="rep" hidden>Report this message</button>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getFirestore,doc,getDoc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const db=getFirestore(initializeApp({apiKey:"AIzaSyCnKefzZS3pMGfaxIIjsRClkmWjR4xpEWQ",authDomain:"olvrahub.firebaseapp.com",projectId:"olvrahub",storageBucket:"olvrahub.firebasestorage.app",messagingSenderId:"821545082724",appId:"1:821545082724:web:f20fe7965bf3dd3fede471"}));
+const $=s=>document.querySelector(s),fx=$('#fx');
+const T=[['#2b3cff','#8a4dff'],['#ff8a3d','#ff3d6e'],['#0fb5a6','#2b6cff']];
+const id=location.pathname.split('/').filter(Boolean).pop();
+let d=null;
+try{const s=await getDoc(doc(db,'love',id));d=s.exists()?s.data():null}catch(e){}
+if(!d){$('#gone').hidden=false}else{
+  const t=T[d.theme]||T[0];document.body.style.background='linear-gradient(135deg,'+t[0]+','+t[1]+')';
+  document.title='A message for '+d.to;
+  $('#hi').textContent='A message for '+d.to;$('#fromline').textContent='From '+d.from;
+  $('#closed').hidden=false;$('#rep').hidden=false;
+}
+const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+function hearts(){let n=0;const t=setInterval(()=>{const s=document.createElement('span');s.className='fl';s.textContent=['❤️','💕','💖'][n%3];s.style.cssText='left:'+Math.random()*100+'vw;font-size:'+(18+Math.random()*26)+'px;animation-duration:'+(4+Math.random()*3)+'s';fx.append(s);setTimeout(()=>s.remove(),7500);if(++n>40)clearInterval(t)},220)}
+function confetti(){for(let i=0;i<90;i++){const s=document.createElement('i');s.className='cf';s.style.cssText='left:'+Math.random()*100+'vw;background:hsl('+Math.random()*360+' 90% 60%);animation-delay:'+Math.random()*1.5+'s;animation-duration:'+(2.5+Math.random()*2)+'s';fx.append(s);setTimeout(()=>s.remove(),6500)}}
+$('#open').onclick=()=>{
+  $('#closed').hidden=true;$('#opened').hidden=false;$('#sig').textContent='— '+d.from;
+  const el=$('#text');el.textContent=d.msg;
+  if(still)return;
+  if(d.anim==='hearts')hearts();
+  else if(d.anim==='confetti')confetti();
+  else{let i=0;el.textContent='';const t=setInterval(()=>{el.textContent=d.msg.slice(0,++i);if(i>=d.msg.length)clearInterval(t)},25)}
+};
+$('#rep').onclick=async()=>{try{await setDoc(doc(db,'loveReports',id+'_'+Date.now()),{id,at:serverTimestamp()});$('#rep').textContent='Reported. Thank you.';$('#rep').disabled=true}catch(e){$('#rep').textContent='Could not send the report. Try again later.'}};
+</script></body></html>
