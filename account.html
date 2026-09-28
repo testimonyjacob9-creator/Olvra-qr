@@ -36,7 +36,7 @@
 import {auth,db} from '/firebase-init.js';
 import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const FLW_PUBLIC_KEY='PASTE_FLW_PUBLIC_KEY'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
+const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
 const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
 const P=await (await fetch('/pricing.json')).json();
 const fmt=p=>new Intl.NumberFormat('en',{style:'currency',currency:p.currency,minimumFractionDigits:0,maximumFractionDigits:2}).format(p.amount);
