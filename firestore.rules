@@ -30,6 +30,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Password-reset and email-verify codes: server only. No client access at all.
+    match /authCodes/{docId} {
+      allow read, write: if false;
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

@@ -3,7 +3,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lumora Premium</title>
 <meta name="description" content="Lumora Premium: 30 days at a time, priced in your local currency.">
-<link rel="canonical" href="https://olvra.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link rel="canonical" href="https://lumoral.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <script src="https://checkout.flutterwave.com/v3.js"></script>
@@ -21,6 +21,7 @@
   <label for="em">Email</label><input id="em" type="text" inputmode="email" autocomplete="email">
   <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" style="width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi)">
   <div class="acts"><button class="btn pri" id="signin">Sign in</button><button class="btn" id="signup">Create account</button></div>
+  <button class="txt" id="forgot">Forgot password?</button>
   <div class="acts"><button class="btn" id="google">Continue with Google</button></div>
 </div>
 <div id="in" hidden>
@@ -31,10 +32,32 @@
   <button class="txt" id="signout">Sign out</button>
 </div>
 <p id="err" role="alert"></p>
+
+<div id="reset" hidden>
+  <h1>Reset password</h1>
+  <div id="rstep1">
+    <label for="rem">Your account email</label><input id="rem" type="text" inputmode="email" autocomplete="email">
+    <div class="acts"><button class="btn pri" id="rsend">Send reset code</button><button class="btn" id="rback1">Back</button></div>
+  </div>
+  <div id="rstep2" hidden>
+    <p class="sub" id="rmsg"></p>
+    <label for="rcode">6-digit code</label><input id="rcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <label for="rnew">New password</label><input id="rnew" type="password" autocomplete="new-password">
+    <div class="acts"><button class="btn pri" id="rconfirm">Set new password</button><button class="btn" id="rresend">Resend code</button></div>
+  </div>
+</div>
+
+<div id="verify" hidden>
+  <h1>Verify your email</h1>
+  <p class="sub" id="vmsg"></p>
+  <label for="vcode">6-digit code</label><input id="vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+  <div class="acts"><button class="btn pri" id="vconfirm">Verify</button><button class="btn" id="vresend">Resend code</button></div>
+  <button class="txt" id="vskip">Skip for now</button>
+</div>
 </div>
 <script type="module">
 import {auth,db} from '/firebase-init.js';
-import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,signOut,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
 const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
@@ -48,14 +71,61 @@ $('#country').onchange=showPrice;showPrice();
 const run=fn=>async()=>{err();try{await fn()}catch(e){err('Could not sign in. Check your email and password and try again.')}};
 $('#signin').onclick=run(()=>signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
 $('#signup').onclick=run(()=>createUserWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
-$('#google').onclick=run(()=>signInWithPopup(auth,new GoogleAuthProvider()));
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+$('#google').onclick=run(async()=>{
+  const p=new GoogleAuthProvider();
+  if(isMobile){await signInWithRedirect(auth,p);return}
+  try{await signInWithPopup(auth,p)}catch(e){
+    if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request')await signInWithRedirect(auth,p);else throw e;
+  }
+});
+getRedirectResult(auth).catch(e=>err('Google sign-in failed: '+(e.message||e.code||'unknown error')));
 $('#signout').onclick=()=>signOut(auth);
+
+// ---- Forgot password (email code via Brevo, no Firebase auth needed) ----
+function showAuth(which){$('#out').hidden=which!=='out';$('#reset').hidden=which!=='reset';$('#verify').hidden=which!=='verify';if(auth.currentUser)$('#in').hidden=which!=='in'}
+$('#forgot').onclick=()=>{err();$('#rem').value=$('#em').value;showAuth('reset');$('#rstep1').hidden=false;$('#rstep2').hidden=true};
+$('#rback1').onclick=()=>showAuth('out');
+async function sendReset(){
+  err();const email=$('#rem').value.trim();if(!email){err('Enter your account email.');return}
+  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'send-reset',email})});
+  const d=await r.json();if(!r.ok){err(d.error||'Could not send the code.');return}
+  $('#rmsg').textContent='Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.';
+  $('#rstep1').hidden=true;$('#rstep2').hidden=false;
+}
+$('#rsend').onclick=sendReset;$('#rresend').onclick=sendReset;
+$('#rconfirm').onclick=async()=>{
+  err();const email=$('#rem').value.trim(),code=$('#rcode').value.trim(),newPassword=$('#rnew').value;
+  if(!code||newPassword.length<6){err('Enter the code and a password of at least 6 characters.');return}
+  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'confirm-reset',email,code,newPassword})});
+  const d=await r.json();if(!r.ok){err(d.error||'Could not reset the password.');return}
+  showAuth('out');err();try{await signInWithEmailAndPassword(auth,email,newPassword)}catch(e){}
+};
+
+// ---- Email verification code (sent after sign-up) ----
+async function sendVerify(){
+  const u=auth.currentUser;if(!u)return;
+  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({action:'send-verify'})});
+  const d=await r.json();$('#vmsg').textContent=r.ok?('Code sent to '+(d.maskedEmail||'your email')+'.'):(d.error||'Could not send the code.');
+}
+$('#vresend').onclick=sendVerify;
+$('#vskip').onclick=()=>showAuth('in');
+$('#vconfirm').onclick=async()=>{
+  err();const u=auth.currentUser;const code=$('#vcode').value.trim();if(!code)return;
+  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({action:'confirm-verify',code})});
+  const d=await r.json();if(!r.ok){$('#vmsg').textContent=d.error||'Incorrect code.';return}
+  showAuth('in');
+};
 async function refresh(u){
   let until=null;
   try{const s=await getDoc(doc(db,'users',u.uid));until=s.exists()&&s.data().premiumUntil?s.data().premiumUntil.toDate():null}catch(e){}
   $('#status').textContent=until&&until>new Date()?'Premium is active until '+until.toLocaleDateString()+'.':'You are on the free plan.';
 }
-onAuthStateChanged(auth,u=>{$('#out').hidden=!!u;$('#in').hidden=!u;if(u)refresh(u)});
+onAuthStateChanged(auth,u=>{
+  if(!u){showAuth('out');return}
+  if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){showAuth('verify');sendVerify();return}
+  showAuth('in');refresh(u);
+});
 $('#pay').onclick=()=>{
   err();const u=auth.currentUser,c=$('#country').value,p=P.countries[c];
   if(FLW_PUBLIC_KEY.startsWith('PASTE')){err('Payments are not switched on yet.');return}

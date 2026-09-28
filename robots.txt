@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 Disallow: /l/
-Sitemap: https://olvra.netlify.app/sitemap.xml
+Sitemap: https://lumoral.netlify.app/sitemap.xml
