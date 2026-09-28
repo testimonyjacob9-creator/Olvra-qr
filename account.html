@@ -68,7 +68,22 @@ const guess=((navigator.language||'').split('-')[1]||'').toUpperCase();
 $('#country').value=P.countries[guess]?guess:'OTHER';
 const showPrice=()=>$('#price').textContent=fmt(P.countries[$('#country').value]);
 $('#country').onchange=showPrice;showPrice();
-const run=fn=>async()=>{err();try{await fn()}catch(e){err('Could not sign in. Check your email and password and try again.')}};
+const FRIENDLY={
+  'auth/invalid-email':'That email address looks invalid.',
+  'auth/missing-password':'Enter a password.',
+  'auth/weak-password':'Password must be at least 6 characters.',
+  'auth/email-already-in-use':'An account already exists with that email. Try signing in instead.',
+  'auth/invalid-credential':'Incorrect email or password.',
+  'auth/wrong-password':'Incorrect email or password.',
+  'auth/user-not-found':'No account found with that email.',
+  'auth/too-many-requests':'Too many attempts. Wait a bit and try again.',
+  'auth/network-request-failed':'Network error. Check your connection and try again.',
+  'auth/unauthorized-domain':'This site is not yet authorized for sign-in. Add it in Firebase → Authentication → Settings → Authorized domains.',
+  'auth/operation-not-allowed':'This sign-in method is not turned on yet in Firebase → Authentication → Sign-in method.',
+  'auth/popup-blocked':'Your browser blocked the popup. Trying a different way...',
+  'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'Firebase is misconfigured (invalid API key).'
+};
+const run=fn=>async()=>{err();try{await fn()}catch(e){err(FRIENDLY[e.code]||e.message||'Something went wrong. Try again.')}};
 $('#signin').onclick=run(()=>signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
 $('#signup').onclick=run(()=>createUserWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
 const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -79,7 +94,7 @@ $('#google').onclick=run(async()=>{
     if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request')await signInWithRedirect(auth,p);else throw e;
   }
 });
-getRedirectResult(auth).catch(e=>err('Google sign-in failed: '+(e.message||e.code||'unknown error')));
+getRedirectResult(auth).catch(e=>err(FRIENDLY[e.code]||('Google sign-in failed: '+(e.message||e.code||'unknown error'))));
 $('#signout').onclick=()=>signOut(auth);
 
 // ---- Forgot password (email code via Brevo, no Firebase auth needed) ----
