@@ -24,3 +24,4 @@ textarea{resize:vertical;min-height:140px}
 .res{margin-top:30px;padding:22px;border-radius:24px;box-shadow:8px 8px 18px var(--lo),-8px -8px 18px var(--hi)}
 .res h2{font-size:1.2rem;margin-bottom:12px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+#anims button{font-size:.85rem;padding:11px 2px}

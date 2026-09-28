@@ -16,6 +16,18 @@ body{color:#fff;background:linear-gradient(135deg,#2b3cff,#8a4dff);display:flex;
 .fl{position:fixed;bottom:-40px;pointer-events:none;animation:up linear forwards;z-index:1}
 .cf{position:fixed;top:-14px;width:9px;height:14px;pointer-events:none;animation:dn linear forwards;z-index:1}
 @keyframes up{to{transform:translateY(-115vh)}}@keyframes dn{to{transform:translateY(110vh) rotate(720deg)}}
+.cpl{position:fixed;bottom:9vh;left:0;width:clamp(150px,42vw,240px);z-index:1;pointer-events:none;filter:drop-shadow(0 0 10px rgba(255,255,255,.65));animation:run 5.5s linear 3 forwards}
+.cpl svg{display:block;overflow:visible}
+.hill{position:fixed;left:-10%;right:-10%;bottom:-8vh;height:16vh;border-radius:50% 50% 0 0;background:rgba(0,0,0,.18);z-index:0}
+.sw{animation:swing .55s ease-in-out infinite alternate}.sw.b{animation-direction:alternate-reverse}
+.bob{animation:bob .275s ease-in-out infinite alternate}
+.hp{position:fixed;pointer-events:none;z-index:1;animation:hp 2.4s ease-out forwards}
+#text.fade{animation:fi 1.4s ease both}
+@keyframes run{from{transform:translateX(-110%)}to{transform:translateX(100vw)}}
+@keyframes swing{from{transform:rotate(-38deg)}to{transform:rotate(38deg)}}
+@keyframes bob{to{transform:translateY(-5px)}}
+@keyframes hp{from{opacity:1;transform:translateY(0) scale(.6)}to{opacity:0;transform:translateY(-140px) scale(1.2)}}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}}
 </style></head><body>
 <div id="fx"></div>
 <div class="vcard">
@@ -41,11 +53,36 @@ if(!d){$('#gone').hidden=false}else{
 const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
 function hearts(){let n=0;const t=setInterval(()=>{const s=document.createElement('span');s.className='fl';s.textContent=['❤️','💕','💖'][n%3];s.style.cssText='left:'+Math.random()*100+'vw;font-size:'+(18+Math.random()*26)+'px;animation-duration:'+(4+Math.random()*3)+'s';fx.append(s);setTimeout(()=>s.remove(),7500);if(++n>40)clearInterval(t)},220)}
 function confetti(){for(let i=0;i<90;i++){const s=document.createElement('i');s.className='cf';s.style.cssText='left:'+Math.random()*100+'vw;background:hsl('+Math.random()*360+' 90% 60%);animation-delay:'+Math.random()*1.5+'s;animation-duration:'+(2.5+Math.random()*2)+'s';fx.append(s);setTimeout(()=>s.remove(),6500)}}
+const S='stroke-linecap="round"';
+const COUPLE='<svg viewBox="0 0 220 170" aria-hidden="true"><g fill="none" stroke="#fff" stroke-linecap="round"><g class="bob">'
++'<line class="sw b" style="transform-origin:60px 92px" x1="60" y1="92" x2="60" y2="136" stroke-width="10"/>'
++'<line class="sw" style="transform-origin:60px 92px" x1="60" y1="92" x2="60" y2="136" stroke-width="10"/>'
++'<line x1="68" y1="48" x2="58" y2="92" stroke-width="20"/>'
++'<line class="sw b" style="transform-origin:66px 54px" x1="66" y1="54" x2="60" y2="90" stroke-width="8"/>'
++'<line x1="68" y1="54" x2="108" y2="84" stroke-width="8"/>'
++'<circle cx="74" cy="28" r="14" fill="#fff" stroke="none"/>'
++'<line class="sw b" style="transform-origin:150px 102px" x1="150" y1="102" x2="150" y2="140" stroke-width="8"/>'
++'<line class="sw" style="transform-origin:150px 102px" x1="150" y1="102" x2="150" y2="140" stroke-width="8"/>'
++'<path d="M152 50 L132 106 Q152 118 178 106 Z" fill="#fff" stroke="none"/>'
++'<line x1="154" y1="48" x2="152" y2="72" stroke-width="16"/>'
++'<line class="sw b" style="transform-origin:154px 54px" x1="154" y1="54" x2="160" y2="90" stroke-width="7"/>'
++'<line x1="152" y1="56" x2="108" y2="84" stroke-width="7"/>'
++'<circle cx="157" cy="30" r="13" fill="#fff" stroke="none"/>'
++'<path d="M147 22 Q122 30 126 60 Q140 46 152 40 Z" fill="#fff" stroke="none"/>'
++'<circle cx="108" cy="84" r="6" fill="#fff" stroke="none"/></g></g></svg>';
+function couple(){
+  $('#text').classList.add('fade');
+  const h=document.createElement('div');h.className='hill';fx.append(h);
+  const c=document.createElement('div');c.className='cpl';c.innerHTML=COUPLE;fx.append(c);
+  const t=setInterval(()=>{const r=c.getBoundingClientRect(),s=document.createElement('span');s.className='hp';s.textContent=['❤️','💕','💖'][Math.floor(Math.random()*3)];s.style.left=(r.left+r.width*.45)+'px';s.style.top=(r.top+r.height*.2)+'px';fx.append(s);setTimeout(()=>s.remove(),2500)},240);
+  c.addEventListener('animationend',e=>{if(e.animationName==='run'){clearInterval(t);c.remove()}});
+}
 $('#open').onclick=()=>{
   $('#closed').hidden=true;$('#opened').hidden=false;$('#sig').textContent='— '+d.from;
   const el=$('#text');el.textContent=d.msg;
   if(still)return;
-  if(d.anim==='hearts')hearts();
+  if(d.anim==='couple')couple();
+  else if(d.anim==='hearts')hearts();
   else if(d.anim==='confetti')confetti();
   else{let i=0;el.textContent='';const t=setInterval(()=>{el.textContent=d.msg.slice(0,++i);if(i>=d.msg.length)clearInterval(t)},25)}
 };

@@ -3,7 +3,7 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Send a Love Message with Animations – Olvra QR</title>
 <meta name="description" content="Write a love message, pick hearts, confetti or a typing animation, and share a private link on WhatsApp.">
-<link rel="canonical" href="https://olvra-qr.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link rel="canonical" href="https://olvra.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 </head><body><div class="wrap">
@@ -15,7 +15,7 @@
   <label for="from">Your name</label><input id="from" maxlength="40" placeholder="Tobi" autocomplete="off">
   <label for="msg">Your message <span class="count" id="cnt">0/600</span></label><textarea id="msg" maxlength="600" placeholder="Write from the heart..."></textarea>
   <div class="lab">Animation</div>
-  <div class="seg" id="anims"><button data-a="hearts" aria-pressed="true">Hearts</button><button data-a="confetti" aria-pressed="false">Confetti</button><button data-a="typing" aria-pressed="false">Typing</button></div>
+  <div class="seg" id="anims"><button data-a="couple" aria-pressed="true">Couple</button><button data-a="hearts" aria-pressed="false">Hearts</button><button data-a="confetti" aria-pressed="false">Confetti</button><button data-a="typing" aria-pressed="false">Typing</button></div>
   <div class="lab">Colours</div>
   <div class="swatches" id="sws">
     <button class="sw" data-i="0" aria-label="Indigo" aria-pressed="true" style="background:linear-gradient(135deg,#2b3cff,#8a4dff)"></button>
@@ -36,7 +36,7 @@
 import {db} from "/firebase-init.js";
 import {doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-let anim='hearts',theme=0;
+let anim='couple',theme=0;
 $$('#anims button').forEach(b=>b.onclick=()=>{anim=b.dataset.a;$$('#anims button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
 $$('.sw').forEach(b=>b.onclick=()=>{theme=+b.dataset.i;$$('.sw').forEach(x=>x.setAttribute('aria-pressed',x===b))});
 $('#msg').oninput=e=>$('#cnt').textContent=e.target.value.length+'/600';
