@@ -2430,6 +2430,10 @@ var qrcode = function() {
     return qrcode;
 }));
 </script>
+<script type="module">
+import {requireAuth} from "/gate.js";
+requireAuth();
+</script>
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const cv=$('#cv'),ctx=cv.getContext('2d');

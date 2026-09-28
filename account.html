@@ -136,29 +136,46 @@ async function refresh(u){
   try{const s=await getDoc(doc(db,'users',u.uid));until=s.exists()&&s.data().premiumUntil?s.data().premiumUntil.toDate():null}catch(e){}
   $('#status').textContent=until&&until>new Date()?'Premium is active until '+until.toLocaleDateString()+'.':'You are on the free plan.';
 }
-onAuthStateChanged(auth,u=>{
+async function verifyPayment(u,transactionId,txRef,country){
+  $('#status').textContent='Verifying your payment...';
+  try{
+    const res=await fetch('/.netlify/functions/verify-premium',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({transactionId,txRef,country})});
+    const d=await res.json();
+    if(!res.ok)throw new Error(d.error);
+  }catch(e){err(e.message||'Could not verify the payment. If you were charged, contact support.')}
+  refresh(u);
+}
+onAuthStateChanged(auth,async u=>{
   if(!u){showAuth('out');return}
   if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){showAuth('verify');sendVerify();return}
-  showAuth('in');refresh(u);
+  showAuth('in');await refresh(u);
+  // Some payment methods (bank transfer, USSD) leave the inline checkout and
+  // come back via redirect instead of firing the in-page callback. Flutterwave
+  // appends these params to redirect_url, so pick up the payment here too.
+  const qs=new URLSearchParams(location.search);
+  if(qs.get('status')==='successful'&&qs.get('transaction_id')&&qs.get('tx_ref')){
+    const country=sessionStorage.getItem('lumora_pay_country')||'NG';
+    history.replaceState({},'',location.pathname);
+    await verifyPayment(u,qs.get('transaction_id'),qs.get('tx_ref'),country);
+  }else if(qs.has('status')){
+    history.replaceState({},'',location.pathname);
+    if(qs.get('status')!=='successful')err('Payment was not completed.');
+  }
+  const next=qs.get('next');
+  if(next&&next.startsWith('/'))location.href=next;
 });
 $('#pay').onclick=()=>{
   err();const u=auth.currentUser,c=$('#country').value,p=P.countries[c];
   if(FLW_PUBLIC_KEY.startsWith('PASTE')){err('Payments are not switched on yet.');return}
   const txRef='OQ-'+u.uid.slice(0,8)+'-'+Date.now();
+  sessionStorage.setItem('lumora_pay_country',c);
   FlutterwaveCheckout({
     public_key:FLW_PUBLIC_KEY,tx_ref:txRef,amount:p.amount,currency:p.currency,
+    redirect_url:location.origin+'/account',
     payment_options:c==='NG'?'card, banktransfer, ussd':undefined,
     customer:{email:u.email,name:u.displayName||u.email},
     customizations:{title:'Lumora Premium',description:P.days+' days'},
-    callback:async r=>{
-      $('#status').textContent='Verifying your payment...';
-      try{
-        const res=await fetch('/.netlify/functions/verify-premium',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({transactionId:r.transaction_id,txRef,country:c})});
-        const d=await res.json();
-        if(!res.ok)throw new Error(d.error);
-      }catch(e){err(e.message||'Could not verify the payment. If you were charged, contact support.')}
-      refresh(u);
-    },
+    callback:async r=>{await verifyPayment(u,r.transaction_id,txRef,c)},
     onclose(){}
   });
 };

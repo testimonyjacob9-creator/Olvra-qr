@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="/love.css">
 </head><body><div class="wrap">
 <a class="logo" href="/">lum<span>ora</span></a>
-<h1>Send a love message</h1>
+<h1><span class="pulse" aria-hidden="true">❤️</span> Send a love message</h1>
 <p class="sub">Write it, pick an animation, then share the private link on WhatsApp.</p>
 <div id="compose">
   <label for="to">Who is it for?</label><input id="to" maxlength="40" placeholder="Amaka" autocomplete="off">
@@ -33,8 +33,9 @@
 </div>
 </div>
 <script type="module">
-import {db} from "/firebase-init.js";
-import {doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {auth} from "/firebase-init.js";
+import {requireAuth} from "/gate.js";
+requireAuth();
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let anim='couple',theme=0;
 $$('#anims button').forEach(b=>b.onclick=()=>{anim=b.dataset.a;$$('#anims button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
@@ -43,12 +44,15 @@ $('#msg').oninput=e=>$('#cnt').textContent=e.target.value.length+'/600';
 $('#go').onclick=async()=>{
   const to=$('#to').value.trim(),from=$('#from').value.trim(),msg=$('#msg').value.trim(),err=$('#err');err.textContent='';
   if(!to||!from||!msg){err.textContent='Fill in who it is for, your name and the message.';return}
-  const A='abcdefghjkmnpqrstuvwxyz23456789';
-  const id=Array.from(crypto.getRandomValues(new Uint8Array(14)),b=>A[b%A.length]).join('');
   $('#go').disabled=true;
   try{
-    await setDoc(doc(db,'love',id),{to,from,msg,anim,theme,at:serverTimestamp()});
-    const url=location.origin+'/l/'+id;
+    const r=await fetch('/.netlify/functions/create-love',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await auth.currentUser.getIdToken()},body:JSON.stringify({to,from,msg,anim,theme})});
+    const d=await r.json();
+    if(!r.ok){
+      err.innerHTML=d.limitReached?(d.error+' <a href="/account" style="color:inherit;font-weight:700">Upgrade →</a>'):(d.error||'Could not create the link.');
+      $('#go').disabled=false;return;
+    }
+    const url=location.origin+'/l/'+d.id;
     $('#url').value=url;
     $('#wa').href='https://wa.me/?text='+encodeURIComponent(from+' sent you a message 💌 '+url);
     $('#share').hidden=!navigator.share;

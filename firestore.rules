@@ -3,17 +3,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // Love messages: anyone with the link can read one message, nobody can list, edit or delete.
+    // Love messages are now created only by the create-love function (admin
+    // SDK, which bypasses these rules) so the free-message limit can't be
+    // bypassed from the browser. Anyone with the link can still read one.
     match /love/{id} {
       allow get: if true;
-      allow list, update, delete: if false;
-      allow create: if id.size() >= 12
-        && request.resource.data.keys().hasOnly(['to','from','msg','anim','theme','at'])
-        && request.resource.data.to is string && request.resource.data.to.size() > 0 && request.resource.data.to.size() <= 40
-        && request.resource.data.from is string && request.resource.data.from.size() > 0 && request.resource.data.from.size() <= 40
-        && request.resource.data.msg is string && request.resource.data.msg.size() > 0 && request.resource.data.msg.size() <= 600
-        && request.resource.data.anim in ['couple','hearts','confetti','typing']
-        && request.resource.data.theme in [0,1,2]
-        && request.resource.data.at == request.time;
+      allow list, create, update, delete: if false;
     }
 
     // Abuse reports: write-only from the public.

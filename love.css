@@ -29,3 +29,13 @@ select{width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:
 .perks{list-style:none;padding:0;margin:18px 0}.perks li{padding:6px 0}.perks small{color:var(--dim)}
 #price{font-size:1.4rem;font-weight:800;margin:18px 0 4px}
 .txt{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;margin-top:14px}
+
+/* Lumora red — used for love-themed pages only */
+:root{--rose:#e11d48}
+.wrap h1{position:relative}
+#anims button[data-a="couple"]{position:relative}
+.pulse{display:inline-block;animation:pulse 1.15s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.btn.pri{background:linear-gradient(135deg,#2b3cff,var(--rose));box-shadow:6px 6px 14px var(--lo),-6px -6px 14px var(--hi),0 0 0 rgba(225,29,72,0)}
+.btn.pri:active{box-shadow:inset 4px 4px 8px var(--lo),inset -4px -4px 8px var(--hi)}
+@media(prefers-reduced-motion:reduce){.pulse{animation:none}}
