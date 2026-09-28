@@ -65,14 +65,14 @@ canvas{display:block;width:100%;height:auto;max-width:520px;margin:0 auto;border
 .about h2{font-size:1.5rem;font-weight:800;margin-bottom:10px}
 .about h3{font-size:1rem;font-weight:700;margin:18px 0 4px}
 .about p{color:var(--ink);max-width:70ch}
-.hr{display:flex;align-items:center;gap:18px}.navlink{color:var(--accent);font-weight:700;text-decoration:none;font-size:.9rem}
+.hr{display:flex;align-items:center;gap:12px}.navlink{color:var(--accent);font-weight:700;text-decoration:none;font-size:.8rem}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
 <body>
 <header class="top">
   <a class="logo" href="/">olv<span>ra</span></a>
-  <div class="hr"><a class="navlink" href="/love">Send a love message</a><button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button></div>
+  <div class="hr"><a class="navlink" href="/love">Love messages</a><a class="navlink" href="/premium">Premium</a><button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button></div>
 </header>
 <main class="app">
   <section>
@@ -2493,6 +2493,7 @@ function renderCard(){
   const q=make(vcard(),'M');
   ctx.beginPath();ctx.roundRect(W-350,190,260,260,22);ctx.fillStyle='#fff';ctx.fill();
   if(q)drawQR(q,W-340,200,240,'#111','#fff');
+  if(!window.OQ_PREMIUM){ctx.save();ctx.globalAlpha=.75;ctx.fillStyle='#fff';ctx.textAlign='right';ctx.font='600 20px '+F;ctx.fillText('Made with Olvra QR',W-70,H-56);ctx.restore()}
   ctx.restore();
   msg(name?'Scan the code to save this contact.':'Fill in your details to build the card.');
 }
@@ -2533,6 +2534,16 @@ document.addEventListener('input',render);
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'));
 render();
 if(document.fonts)document.fonts.ready.then(render);
+</script>
+<script type="module">
+import {auth,db} from '/firebase-init.js';
+import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+onAuthStateChanged(auth,async u=>{
+  let p=false;
+  if(u){try{const s=await getDoc(doc(db,'users',u.uid));const t=s.exists()&&s.data().premiumUntil;p=!!t&&t.toDate()>new Date()}catch(e){}}
+  window.OQ_PREMIUM=p;if(typeof render==='function')render();
+});
 </script>
 </body>
 </html>

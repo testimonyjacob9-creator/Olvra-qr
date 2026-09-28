@@ -24,6 +24,12 @@ service cloud.firestore {
       allow read, update, delete: if false;
     }
 
+    // Premium status: a signed-in user can read only their own record. Only the server writes it.
+    match /users/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if false;
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Olvra QR Premium</title>
+<meta name="description" content="Olvra QR Premium: 30 days at a time, priced in your local currency.">
+<link rel="canonical" href="https://olvra.netlify.app/premium"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+</head><body><div class="wrap">
+<a class="logo" href="/">olv<span>ra</span> QR</a>
+<h1>Premium</h1>
+<p class="sub">30 days at a time, priced in your local currency.</p>
+<ul class="perks">
+  <li>✅ No watermark on your business cards</li>
+  <li>🔜 <small>Coming soon: extra card templates and your logo in QR codes</small></li>
+  <li>🔜 <small>Coming soon: love links that never expire</small></li>
+  <li>🔜 <small>Coming soon: more animations and longer messages</small></li>
+</ul>
+<div id="out">
+  <label for="em">Email</label><input id="em" type="text" inputmode="email" autocomplete="email">
+  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" style="width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi)">
+  <div class="acts"><button class="btn pri" id="signin">Sign in</button><button class="btn" id="signup">Create account</button></div>
+  <div class="acts"><button class="btn" id="google">Continue with Google</button></div>
+</div>
+<div id="in" hidden>
+  <p id="status"></p>
+  <label for="country">Your country</label><select id="country"></select>
+  <p id="price"></p><p class="sub">for 30 days. Paying again adds 30 more days.</p>
+  <div class="acts"><button class="btn pri" id="pay">Pay for Premium</button></div>
+  <button class="txt" id="signout">Sign out</button>
+</div>
+<p id="err" role="alert"></p>
+</div>
+<script type="module">
+import {auth,db} from '/firebase-init.js';
+import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,GoogleAuthProvider,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const FLW_PUBLIC_KEY='PASTE_FLW_PUBLIC_KEY'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
+const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
+const P=await (await fetch('/pricing.json')).json();
+const fmt=p=>new Intl.NumberFormat('en',{style:'currency',currency:p.currency,minimumFractionDigits:0,maximumFractionDigits:2}).format(p.amount);
+$('#country').innerHTML=Object.entries(P.countries).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
+const guess=((navigator.language||'').split('-')[1]||'').toUpperCase();
+$('#country').value=P.countries[guess]?guess:'OTHER';
+const showPrice=()=>$('#price').textContent=fmt(P.countries[$('#country').value]);
+$('#country').onchange=showPrice;showPrice();
+const run=fn=>async()=>{err();try{await fn()}catch(e){err('Could not sign in. Check your email and password and try again.')}};
+$('#signin').onclick=run(()=>signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
+$('#signup').onclick=run(()=>createUserWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
+$('#google').onclick=run(()=>signInWithPopup(auth,new GoogleAuthProvider()));
+$('#signout').onclick=()=>signOut(auth);
+async function refresh(u){
+  let until=null;
+  try{const s=await getDoc(doc(db,'users',u.uid));until=s.exists()&&s.data().premiumUntil?s.data().premiumUntil.toDate():null}catch(e){}
+  $('#status').textContent=until&&until>new Date()?'Premium is active until '+until.toLocaleDateString()+'.':'You are on the free plan.';
+}
+onAuthStateChanged(auth,u=>{$('#out').hidden=!!u;$('#in').hidden=!u;if(u)refresh(u)});
+$('#pay').onclick=()=>{
+  err();const u=auth.currentUser,c=$('#country').value,p=P.countries[c];
+  if(FLW_PUBLIC_KEY.startsWith('PASTE')){err('Payments are not switched on yet.');return}
+  const txRef='OQ-'+u.uid.slice(0,8)+'-'+Date.now();
+  FlutterwaveCheckout({
+    public_key:FLW_PUBLIC_KEY,tx_ref:txRef,amount:p.amount,currency:p.currency,
+    payment_options:c==='NG'?'card, banktransfer, ussd':undefined,
+    customer:{email:u.email,name:u.displayName||u.email},
+    customizations:{title:'Olvra QR Premium',description:P.days+' days'},
+    callback:async r=>{
+      $('#status').textContent='Verifying your payment...';
+      try{
+        const res=await fetch('/.netlify/functions/verify-premium',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({transactionId:r.transaction_id,txRef,country:c})});
+        const d=await res.json();
+        if(!res.ok)throw new Error(d.error);
+      }catch(e){err(e.message||'Could not verify the payment. If you were charged, contact support.')}
+      refresh(u);
+    },
+    onclose(){}
+  });
+};
+</script></body></html>

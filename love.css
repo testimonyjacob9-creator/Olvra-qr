@@ -25,3 +25,7 @@ textarea{resize:vertical;min-height:140px}
 .res h2{font-size:1.2rem;margin-bottom:12px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 #anims button{font-size:.85rem;padding:11px 2px}
+select{width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi)}
+.perks{list-style:none;padding:0;margin:18px 0}.perks li{padding:6px 0}.perks small{color:var(--dim)}
+#price{font-size:1.4rem;font-weight:800;margin:18px 0 4px}
+.txt{background:none;border:0;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;text-decoration:underline;padding:0;margin-top:14px}
