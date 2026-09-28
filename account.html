@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Olvra QR Premium</title>
-<meta name="description" content="Olvra QR Premium: 30 days at a time, priced in your local currency.">
-<link rel="canonical" href="https://olvra.netlify.app/premium"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<title>Lumora Premium</title>
+<meta name="description" content="Lumora Premium: 30 days at a time, priced in your local currency.">
+<link rel="canonical" href="https://olvra.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 </head><body><div class="wrap">
-<a class="logo" href="/">olv<span>ra</span> QR</a>
-<h1>Premium</h1>
+<a class="logo" href="/">lum<span>ora</span></a>
+<h1>Your account</h1>
 <p class="sub">30 days at a time, priced in your local currency.</p>
 <ul class="perks">
   <li>✅ No watermark on your business cards</li>
@@ -64,7 +64,7 @@ $('#pay').onclick=()=>{
     public_key:FLW_PUBLIC_KEY,tx_ref:txRef,amount:p.amount,currency:p.currency,
     payment_options:c==='NG'?'card, banktransfer, ussd':undefined,
     customer:{email:u.email,name:u.displayName||u.email},
-    customizations:{title:'Olvra QR Premium',description:P.days+' days'},
+    customizations:{title:'Lumora Premium',description:P.days+' days'},
     callback:async r=>{
       $('#status').textContent='Verifying your payment...';
       try{

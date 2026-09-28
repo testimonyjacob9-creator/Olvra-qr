@@ -1,1 +1,4 @@
-/l/*  /view.html  200
+/l/*      /view.html  200
+/qr       /tool.html  200
+/card     /tool.html  200
+/premium  /account    301
