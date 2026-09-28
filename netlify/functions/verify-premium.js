@@ -7,9 +7,11 @@ const admin = require("firebase-admin");
 const PRICING = require("../../pricing.json");
 
 if (!admin.apps.length) {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
-  if (!raw) throw new Error("FIREBASE_SERVICE_ACCOUNT_BASE64 is not set.");
-  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(Buffer.from(raw.trim(), "base64").toString("utf8"))) });
+  // Accepts either the raw service-account JSON or its base64 form.
+  const raw = (process.env.FIREBASE_SERVICE_ACCOUNT_JSON || process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || "").trim();
+  if (!raw) throw new Error("Set FIREBASE_SERVICE_ACCOUNT_JSON in Netlify environment variables.");
+  const json = raw.startsWith("{") ? raw : Buffer.from(raw, "base64").toString("utf8");
+  admin.initializeApp({ credential: admin.credential.cert(JSON.parse(json)) });
 }
 const db = admin.firestore();
 const out = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
