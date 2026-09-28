@@ -2502,12 +2502,12 @@ function render(){tab==='qr'?renderQR():renderCard()}
 function dl(url,name){const a=document.createElement('a');a.href=url;a.download=name;a.click()}
 $('#png').onclick=()=>{
   if(tab==='qr'&&!payload()){msg('Add some content first.');return}
-  cv.toBlob(b=>{const u=URL.createObjectURL(b);dl(u,tab==='qr'?'olvra-qr.png':'olvra-card.png');setTimeout(()=>URL.revokeObjectURL(u),1500)});
+  cv.toBlob(b=>{const u=URL.createObjectURL(b);dl(u,tab==='qr'?'lumora-qr.png':'lumora-card.png');setTimeout(()=>URL.revokeObjectURL(u),1500)});
 };
 $('#svgBtn').onclick=()=>{
   const t=payload(),q=t&&make(t,ec);
   if(!q){msg('Add some content first.');return}
-  const u=URL.createObjectURL(new Blob([svg(q,$('#fg').value)],{type:'image/svg+xml'}));dl(u,'olvra-qr.svg');setTimeout(()=>URL.revokeObjectURL(u),1500);
+  const u=URL.createObjectURL(new Blob([svg(q,$('#fg').value)],{type:'image/svg+xml'}));dl(u,'lumora-qr.svg');setTimeout(()=>URL.revokeObjectURL(u),1500);
 };
 $('#vcfBtn').onclick=()=>{
   if(!val('name')){msg('Add your name first.');return}
