@@ -1,0 +1,5 @@
+node_modules/
+*adminsdk*.json
+*.b64
+.env
+.env.*
