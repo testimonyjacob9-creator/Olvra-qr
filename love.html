@@ -33,9 +33,8 @@
 </div>
 </div>
 <script type="module">
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {getFirestore,doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const db=getFirestore(initializeApp({apiKey:"AIzaSyCnKefzZS3pMGfaxIIjsRClkmWjR4xpEWQ",authDomain:"olvrahub.firebaseapp.com",projectId:"olvrahub",storageBucket:"olvrahub.firebasestorage.app",messagingSenderId:"821545082724",appId:"1:821545082724:web:f20fe7965bf3dd3fede471"}));
+import {db} from "/firebase-init.js";
+import {doc,setDoc,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 let anim='hearts',theme=0;
 $$('#anims button').forEach(b=>b.onclick=()=>{anim=b.dataset.a;$$('#anims button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
