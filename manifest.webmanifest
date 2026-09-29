@@ -1,7 +1,7 @@
 {
   "name": "Lumora",
   "short_name": "Lumora",
-  "description": "Free QR codes and digital business cards.",
+  "description": "QR codes, business cards and love messages.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
