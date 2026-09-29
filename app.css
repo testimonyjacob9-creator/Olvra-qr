@@ -1,0 +1,80 @@
+/* Lumora — single glass design system. Loaded after love.css/nav.css so
+   these rules win; replaces the old neumorphic soft-UI look everywhere. */
+:root{
+  --g1:#2b3cff; --g2:#8a4dff; --rose:#e11d48;
+  --ink:#151a2e; --dim:#5b6178cc; --line:rgba(255,255,255,.55);
+  --glass:rgba(255,255,255,.30); --glass-hi:rgba(255,255,255,.55);
+}
+[data-theme=dark]{
+  --ink:#f1f2fb; --dim:#a7acc4cc; --line:rgba(255,255,255,.14);
+  --glass:rgba(255,255,255,.06); --glass-hi:rgba(255,255,255,.12);
+}
+html,body{background:
+  radial-gradient(900px 500px at 12% -8%, #7d8bff55, transparent 60%),
+  radial-gradient(700px 500px at 100% 0%, #ff8a6a4d, transparent 55%),
+  radial-gradient(800px 600px at 50% 120%, #6be3d84d, transparent 55%),
+  #eef0fb;
+  background-attachment:fixed;
+}
+[data-theme=dark] html,[data-theme=dark] body{background:
+  radial-gradient(900px 500px at 12% -8%, #37409a55, transparent 60%),
+  radial-gradient(700px 500px at 100% 0%, #7a3f5c4d, transparent 55%),
+  radial-gradient(800px 600px at 50% 120%, #1f6f664d, transparent 55%),
+  #0e1020;
+}
+body,.wrap,.app,.hero,.grid{color:var(--ink)}
+
+/* Glass surfaces replace neumorphic cards everywhere */
+.glass,.card,.res,.svc,.seg,#anims,#ecs,.faq,.notif,.vcard,#olive-panel,.bottom-nav-inner{
+  background:var(--glass) !important;
+  border:1px solid var(--line) !important;
+  backdrop-filter:blur(20px) saturate(150%);
+  -webkit-backdrop-filter:blur(20px) saturate(150%);
+  box-shadow:0 10px 30px rgba(20,20,60,.10) !important;
+}
+[data-theme=dark] .glass,[data-theme=dark] .card,[data-theme=dark] .res,[data-theme=dark] .svc,
+[data-theme=dark] .seg,[data-theme=dark] #anims,[data-theme=dark] #ecs,[data-theme=dark] .faq,
+[data-theme=dark] .notif,[data-theme=dark] .vcard,[data-theme=dark] #olive-panel,[data-theme=dark] .bottom-nav-inner{
+  box-shadow:0 10px 30px rgba(0,0,0,.35) !important;
+}
+.svc{border-radius:22px}
+
+/* Inputs: flat glass fields, no inset shadow trick */
+input:not([type=range]):not([type=checkbox]),textarea,select{
+  background:rgba(255,255,255,.5) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:none !important;
+  color:var(--ink) !important;
+}
+[data-theme=dark] input:not([type=range]):not([type=checkbox]),
+[data-theme=dark] textarea,[data-theme=dark] select{background:rgba(255,255,255,.06) !important}
+
+/* Buttons */
+.btn,.chip,.bellbtn,.sw,#theme{
+  background:rgba(255,255,255,.55) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:none !important;
+}
+[data-theme=dark] .btn,[data-theme=dark] .chip,[data-theme=dark] .bellbtn,[data-theme=dark] .sw,[data-theme=dark] #theme{
+  background:rgba(255,255,255,.08) !important;
+}
+.btn:active{transform:scale(.97)}
+.btn.pri{
+  background:linear-gradient(135deg,var(--g1),var(--rose)) !important;
+  border:0 !important; color:#fff !important;
+  box-shadow:0 8px 22px rgba(43,60,255,.35) !important;
+}
+.seg button[aria-pressed=true],.seg button[aria-selected=true],
+#anims button[aria-pressed=true],#ecs button[aria-pressed=true]{
+  background:linear-gradient(135deg,var(--g1),var(--g2)) !important;
+  color:#fff !important; box-shadow:none !important;
+}
+
+/* Bottom nav + app bar, glass */
+.bottom-nav-inner{border-radius:24px !important}
+.nav-item.active{background:linear-gradient(135deg,var(--g1),var(--g2)) !important;color:#fff !important;box-shadow:none !important}
+.appbar{backdrop-filter:blur(14px)}
+
+/* Trim excess whitespace so it feels like an app, not a landing page */
+.wrap{max-width:520px;padding-top:14px}
+h1{letter-spacing:-.03em}

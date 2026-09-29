@@ -68,8 +68,20 @@ canvas{display:block;width:100%;height:auto;max-width:520px;margin:0 auto;border
 .hr{display:flex;align-items:center;gap:12px}.navlink{color:var(--accent);font-weight:700;text-decoration:none;font-size:.8rem}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
+#gateScreen .e{font-size:44px;margin-bottom:6px}
+</style><link rel="stylesheet" href="/app.css">
 </head>
 <body>
+<div id="gateScreen"><div class="glass card">
+  <div class="e">🔒</div>
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
+  <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
+  <a class="btn pri" id="gateLink" href="/account">Sign in or create account</a>
+</div></div>
+<div id="gatedApp" hidden>
 <header class="top">
   <a class="logo" href="/">lum<span>ora</span></a>
   <button id="theme" role="switch" aria-checked="false" aria-label="Dark mode"><i></i></button>
@@ -2553,5 +2565,7 @@ onAuthStateChanged(auth,async u=>{
   window.OQ_PREMIUM=p;if(typeof render==='function')render();
 });
 </script>
+</div>
 </body>
+</div>
 </html>

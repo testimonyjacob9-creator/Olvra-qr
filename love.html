@@ -6,7 +6,19 @@
 <link rel="canonical" href="https://lumoral.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
-</head><body><div class="wrap">
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
+#gateScreen .e{font-size:44px;margin-bottom:6px}
+</style><link rel="stylesheet" href="/app.css">
+</head><body>
+<div id="gateScreen"><div class="glass card">
+  <div class="e">🔒</div>
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
+  <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
+  <a class="btn pri" id="gateLink" href="/account">Sign in or create account</a>
+</div></div>
+<div id="gatedApp" hidden><div class="wrap">
 <a class="logo" href="/">lum<span>ora</span></a>
 <h1><span class="pulse" aria-hidden="true">❤️</span> Send a love message</h1>
 <p class="sub">Write it, pick an animation, then share the private link on WhatsApp.</p>
@@ -65,4 +77,5 @@ $('#go').onclick=async()=>{
 };
 $('#copy').onclick=async()=>{try{await navigator.clipboard.writeText($('#url').value);$('#copy').textContent='Copied'}catch(e){$('#url').select()}};
 $('#again').onclick=()=>{$('#res').hidden=true;$('#compose').hidden=false;$('#copy').textContent='Copy link'};
-</script></body></html>
+</script></div>
+</body></html>
