@@ -26,7 +26,7 @@ service cloud.firestore {
       // field (premiumUntil, loveCount, email) is written only by server
       // functions using the admin SDK, which bypasses these rules.
       allow update: if request.auth != null && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoURL','displayName']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoURL','displayName','pushSubscription']);
       allow create: if false;
       allow delete: if false;
 

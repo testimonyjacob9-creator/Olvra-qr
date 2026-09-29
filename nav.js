@@ -20,6 +20,9 @@ const ITEMS = [
 ];
 
 export function mountNav({ showLogo = true } = {}) {
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+  }
   const link = document.createElement("link");
   link.rel = "stylesheet"; link.href = "/nav.css";
   document.head.appendChild(link);

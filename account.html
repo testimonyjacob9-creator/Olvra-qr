@@ -46,7 +46,14 @@
 <p id="err" role="alert"></p>
 
 <div id="notifSection" hidden>
-  <h2 id="notifications" style="font-size:1.1rem;margin:26px 0 12px">Notifications</h2>
+  <h2 style="font-size:1.1rem;margin:26px 0 8px">Push notifications</h2>
+  <div class="row" style="margin-bottom:8px">
+    <span class="sub" id="pushLabel" style="margin:0">Get notified on this device</span>
+    <label style="display:inline-flex;align-items:center;cursor:pointer">
+      <input type="checkbox" id="pushToggle" style="width:44px;height:26px;accent-color:var(--accent,#2b3cff)">
+    </label>
+  </div>
+  <h2 id="notifications" style="font-size:1.1rem;margin:22px 0 12px">Notifications</h2>
   <div id="notifList"><p class="sub">No notifications yet.</p></div>
 </div>
 
@@ -208,6 +215,58 @@ function watchNotifications(u){
   },()=>{});
 }
 const $$=s=>[...document.querySelectorAll(s)];
+
+// ---- Push notifications (Web Push / VAPID, same pattern as WoodPayVTU) ----
+let _vapidCache=null;
+async function getVapidKey(){
+  if(_vapidCache)return _vapidCache;
+  const r=await fetch('/.netlify/functions/get-vapid-key');
+  if(!r.ok)throw new Error('Push is not set up yet.');
+  _vapidCache=(await r.json()).publicKey;return _vapidCache;
+}
+function b64ToArr(b64){
+  const pad='='.repeat((4-b64.length%4)%4);
+  const raw=atob((b64+pad).replace(/-/g,'+').replace(/_/g,'/'));
+  return Uint8Array.from([...raw].map(c=>c.charCodeAt(0)));
+}
+async function savePushSubscription(sub){
+  const u=auth.currentUser;if(!u)return;
+  await setDoc(doc(db,'users',u.uid),{pushSubscription:sub.toJSON()},{merge:true});
+}
+async function subscribeToPush(reg,forceNew=false){
+  let existing=await reg.pushManager.getSubscription();
+  if(existing&&forceNew){await existing.unsubscribe();existing=null}
+  if(existing){await savePushSubscription(existing);return existing}
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted')return null;
+  const key=await getVapidKey();
+  const sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64ToArr(key)});
+  await savePushSubscription(sub);return sub;
+}
+async function initPushToggle(){
+  const t=$('#pushToggle');if(!t)return;
+  if(!('Notification' in window)||!('serviceWorker' in navigator)){t.disabled=true;$('#pushLabel').textContent='Not supported on this browser';return}
+  const reg=await navigator.serviceWorker.ready.catch(()=>null);if(!reg)return;
+  const sub=await reg.pushManager.getSubscription();
+  const on=sub!==null&&Notification.permission==='granted';
+  t.checked=on;$('#pushLabel').textContent=on?'Notifications are on':'Get notified on this device';
+}
+$('#pushToggle')?.addEventListener('change',async()=>{
+  const t=$('#pushToggle');
+  if(t.checked){
+    $('#pushLabel').textContent='Enabling...';
+    const reg=await navigator.serviceWorker.ready.catch(()=>null);
+    const sub=reg&&await subscribeToPush(reg,true).catch(()=>null);
+    if(sub){$('#pushLabel').textContent='Notifications are on'}
+    else{t.checked=false;$('#pushLabel').textContent=Notification.permission==='denied'?'Blocked — enable in browser settings':'Could not enable — try again'}
+  }else{
+    const reg=await navigator.serviceWorker.ready.catch(()=>null);
+    const sub=reg&&await reg.pushManager.getSubscription();
+    if(sub)await sub.unsubscribe();
+    const u=auth.currentUser;if(u){try{await setDoc(doc(db,'users',u.uid),{pushSubscription:null},{merge:true})}catch(e){}}
+    $('#pushLabel').textContent='Get notified on this device';
+  }
+});
 async function verifyPayment(u,transactionId,txRef,country){
   $('#status').textContent='Verifying your payment...';
   try{
@@ -220,7 +279,7 @@ async function verifyPayment(u,transactionId,txRef,country){
 onAuthStateChanged(auth,async u=>{
   if(!u){showAuth('out');return}
   if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){showAuth('verify');sendVerify();return}
-  showAuth('in');await refresh(u);watchNotifications(u);
+  showAuth('in');await refresh(u);watchNotifications(u);initPushToggle();
   // Some payment methods (bank transfer, USSD) leave the inline checkout and
   // come back via redirect instead of firing the in-page callback. Flutterwave
   // appends these params to redirect_url, so pick up the payment here too.

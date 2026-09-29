@@ -10,6 +10,13 @@ async function notifyUser(admin, db, uid, { title, body, type = "info", url = "/
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
     });
   } catch (e) { console.error("notifyUser failed:", e.message); }
+  // Also fire a real device push if the user has one enabled. Best-effort —
+  // never throws, so an in-app bell notification always still lands even
+  // if the person has push turned off or their subscription has expired.
+  try {
+    const { pushToUid } = require("./push");
+    await pushToUid(db, uid, { title: finalTitle, body, url });
+  } catch (e) { console.error("notifyUser push failed:", e.message); }
 }
 async function assertAdmin(db, uid) {
   const snap = await db.collection("admins").doc(uid).get();
