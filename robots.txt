@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
 Disallow: /l/
+Disallow: /admin
 Sitemap: https://lumoral.netlify.app/sitemap.xml

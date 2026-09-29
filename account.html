@@ -6,10 +6,22 @@
 <link rel="canonical" href="https://lumoral.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
+<link rel="stylesheet" href="/nav.css">
 <script src="https://checkout.flutterwave.com/v3.js"></script>
+<style>
+#avatarWrap{display:flex;align-items:center;gap:16px;margin:6px 0 22px}
+#avatarImg{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--bg);box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi)}
+#avatarFile{display:none}
+.notif{padding:12px 14px;border-radius:14px;margin-bottom:8px;box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi)}
+.notif.unread{border-left:4px solid var(--rose,#e11d48)}
+.notif b{display:block;font-size:.88rem}.notif span{color:var(--dim);font-size:.82rem}
+</style>
 </head><body><div class="wrap">
-<a class="logo" href="/">lum<span>ora</span></a>
-<h1>Your account</h1>
+<h1>Me</h1>
+<div id="avatarWrap">
+  <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" style="width:72px;height:72px;border-radius:50%;background:var(--bg);box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi);display:grid;place-items:center;font-size:26px">🙂</div>
+  <div><button class="btn" id="avatarBtn" type="button">Change photo</button><input id="avatarFile" type="file" accept="image/*"><p class="sub" id="avatarMsg" style="margin-top:6px"></p></div>
+</div>
 <p class="sub">30 days at a time, priced in your local currency.</p>
 <ul class="perks">
   <li>✅ No watermark on your business cards</li>
@@ -32,6 +44,13 @@
   <button class="txt" id="signout">Sign out</button>
 </div>
 <p id="err" role="alert"></p>
+
+<div id="notifSection" hidden>
+  <h2 id="notifications" style="font-size:1.1rem;margin:26px 0 12px">Notifications</h2>
+  <div id="notifList"><p class="sub">No notifications yet.</p></div>
+</div>
+
+<p style="margin-top:30px"><a href="/terms" style="color:var(--accent)">Terms &amp; Conditions</a> · <a href="/help" style="color:var(--accent)">Help</a></p>
 
 <div id="reset" hidden>
   <h1>Reset password</h1>
@@ -56,9 +75,12 @@
 </div>
 </div>
 <script type="module">
-import {auth,db} from '/firebase-init.js';
+import {auth,db,storage} from '/firebase-init.js';
 import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,signOut,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {doc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {doc,getDoc,setDoc,collection,query,orderBy,limit,onSnapshot,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import {mountNav} from '/nav.js';
+mountNav({showLogo:false});
 const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
 const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
 const P=await (await fetch('/pricing.json')).json();
@@ -132,10 +154,46 @@ $('#vconfirm').onclick=async()=>{
   showAuth('in');
 };
 async function refresh(u){
-  let until=null;
-  try{const s=await getDoc(doc(db,'users',u.uid));until=s.exists()&&s.data().premiumUntil?s.data().premiumUntil.toDate():null}catch(e){}
+  let data={};
+  try{const s=await getDoc(doc(db,'users',u.uid));data=s.exists()?s.data():{}}catch(e){}
+  const until=data.premiumUntil?data.premiumUntil.toDate():null;
   $('#status').textContent=until&&until>new Date()?'Premium is active until '+until.toLocaleDateString()+'.':'You are on the free plan.';
+  const photo=data.photoURL||u.photoURL;
+  if(photo){$('#avatarImg').src=photo;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true}
 }
+
+// ---- Profile photo ----
+$('#avatarBtn').onclick=()=>$('#avatarFile').click();
+$('#avatarFile').onchange=async()=>{
+  const u=auth.currentUser,file=$('#avatarFile').files[0];if(!u||!file)return;
+  if(!file.type.startsWith('image/')){$('#avatarMsg').textContent='Choose an image file.';return}
+  if(file.size>4*1024*1024){$('#avatarMsg').textContent='Image must be under 4MB.';return}
+  $('#avatarMsg').textContent='Uploading...';
+  try{
+    const r=ref(storage,'avatars/'+u.uid);
+    await uploadBytes(r,file);
+    const url=await getDownloadURL(r);
+    await setDoc(doc(db,'users',u.uid),{photoURL:url},{merge:true});
+    $('#avatarImg').src=url;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true;
+    $('#avatarMsg').textContent='Photo updated.';
+  }catch(e){$('#avatarMsg').textContent='Could not upload the photo. Try again.'}
+};
+
+// ---- Notifications ----
+function watchNotifications(u){
+  const q=query(collection(db,'users',u.uid,'notifications'),orderBy('createdAt','desc'),limit(30));
+  onSnapshot(q,snap=>{
+    $('#notifSection').hidden=snap.empty;
+    if(snap.empty)return;
+    $('#notifList').innerHTML=snap.docs.map(d=>{
+      const n=d.data();
+      const when=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString():'';
+      return `<div class="notif ${n.read?'':'unread'}" data-id="${d.id}"><b>${n.title||''}</b><span>${n.body||''} · ${when}</span></div>`;
+    }).join('');
+    $$('.notif').forEach(el=>el.onclick=()=>updateDoc(doc(db,'users',u.uid,'notifications',el.dataset.id),{read:true}).catch(()=>{}));
+  },()=>{});
+}
+const $$=s=>[...document.querySelectorAll(s)];
 async function verifyPayment(u,transactionId,txRef,country){
   $('#status').textContent='Verifying your payment...';
   try{
@@ -148,7 +206,7 @@ async function verifyPayment(u,transactionId,txRef,country){
 onAuthStateChanged(auth,async u=>{
   if(!u){showAuth('out');return}
   if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){showAuth('verify');sendVerify();return}
-  showAuth('in');await refresh(u);
+  showAuth('in');await refresh(u);watchNotifications(u);
   // Some payment methods (bank transfer, USSD) leave the inline checkout and
   // come back via redirect instead of firing the in-page callback. Flutterwave
   // appends these params to redirect_url, so pick up the payment here too.

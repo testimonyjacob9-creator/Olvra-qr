@@ -22,8 +22,28 @@ service cloud.firestore {
     // Premium status: a signed-in user can read only their own record. Only the server writes it.
     match /users/{uid} {
       allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if false;
+      // Users may update only their own display name and photo — every other
+      // field (premiumUntil, loveCount, email) is written only by server
+      // functions using the admin SDK, which bypasses these rules.
+      allow update: if request.auth != null && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['photoURL','displayName']);
+      allow create: if false;
+      allow delete: if false;
+
+      // Notifications: the owner can read their own and mark them read.
+      // Only server functions (via notifyUser) create them.
+      match /notifications/{nid} {
+        allow read: if request.auth != null && request.auth.uid == uid;
+        allow update: if request.auth != null && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+        allow create, delete: if false;
+      }
     }
+
+    // Admin membership and the support inbox are read only through admin-*
+    // functions (admin SDK), never directly by clients.
+    match /admins/{uid} { allow read, write: if false; }
+    match /support_messages/{id} { allow read, write: if false; }
 
     // Password-reset and email-verify codes: server only. No client access at all.
     match /authCodes/{docId} {

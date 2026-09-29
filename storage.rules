@@ -1,0 +1,15 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Profile photos: owner can upload their own (max 4MB, images only);
+    // anyone can view one, because a recipient must see the sender's photo
+    // on a love-message link.
+    match /avatars/{uid} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == uid
+        && request.resource.size < 4 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

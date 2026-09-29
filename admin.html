@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin – Lumora</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<style>
+.card{border-radius:20px;box-shadow:6px 6px 14px var(--lo),-6px -6px 14px var(--hi);padding:20px;margin:18px 0}
+.stat{font-size:1.8rem;font-weight:800}
+.tbl{width:100%;border-collapse:collapse;font-size:.85rem}
+.tbl th,.tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--lo)}
+.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:700}
+.pill.pre{background:#2b3cff22;color:#2b3cff}.pill.free{background:#00000012;color:var(--dim)}
+textarea{width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi);min-height:100px}
+</style></head><body><div class="wrap" style="max-width:760px">
+<a class="logo" href="/">lum<span>ora</span></a>
+<h1>Admin</h1>
+<div id="gate"><p>Checking access...</p></div>
+<div id="app" hidden>
+
+<div class="card">
+  <div class="stat" id="statUsers">–</div><div class="sub">Users</div>
+</div>
+<div class="card">
+  <div class="stat" id="statPremium">–</div><div class="sub">Active premium</div>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:10px">Send a notification bell</h2>
+  <label for="ntitle">Title</label><input id="ntitle" placeholder="New feature!">
+  <label for="nbody">Message</label><textarea id="nbody" placeholder="Tell users what's new..."></textarea>
+  <div class="acts"><button class="btn pri" id="nsend">Send to everyone</button></div>
+  <p id="nmsg" class="sub"></p>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:10px">Send a broadcast email</h2>
+  <label for="esub">Subject</label><input id="esub" placeholder="Something new on Lumora">
+  <label for="ebody">Message</label><textarea id="ebody" placeholder="Plain text — Lumora adds the design."></textarea>
+  <div class="acts"><button class="btn pri" id="esend">Email everyone</button></div>
+  <p id="emsg" class="sub"></p>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:10px">Users</h2>
+  <table class="tbl"><thead><tr><th>Email</th><th>Status</th><th>Love msgs</th></tr></thead><tbody id="userRows"></tbody></table>
+</div>
+
+<div class="card">
+  <h2 style="margin-bottom:10px">Support inbox</h2>
+  <div id="supportRows"></div>
+</div>
+
+</div></div>
+<script type="module">
+import { auth } from "/firebase-init.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const $=s=>document.querySelector(s);
+async function call(fn, opts={}) {
+  const u=auth.currentUser;
+  const r=await fetch('/.netlify/functions/'+fn,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+await u.getIdToken()}});
+  const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
+}
+onAuthStateChanged(auth, async u=>{
+  if(!u){$('#gate').innerHTML='<p>Sign in first, then reopen this page.</p><a class="btn pri" href="/account?next=/admin">Sign in</a>';return}
+  try{
+    const {isAdmin}=await call('admin-check');
+    if(!isAdmin){$('#gate').innerHTML='<p>This account does not have admin access.</p>';return}
+  }catch(e){$('#gate').innerHTML='<p>'+(e.message||'Could not verify access.')+'</p>';return}
+  $('#gate').hidden=true;$('#app').hidden=false;
+  load();
+});
+async function load(){
+  try{
+    const {users}=await call('admin-list-users');
+    $('#statUsers').textContent=users.length;
+    $('#statPremium').textContent=users.filter(u=>u.premiumUntil&&new Date(u.premiumUntil)>new Date()).length;
+    $('#userRows').innerHTML=users.map(u=>{
+      const active=u.premiumUntil&&new Date(u.premiumUntil)>new Date();
+      return `<tr><td>${u.email||u.uid.slice(0,8)}</td><td><span class="pill ${active?'pre':'free'}">${active?'Premium':'Free'}</span></td><td>${u.loveCount||0}</td></tr>`;
+    }).join('')||'<tr><td colspan=3>No users yet.</td></tr>';
+  }catch(e){$('#userRows').innerHTML='<tr><td colspan=3>'+e.message+'</td></tr>'}
+  try{
+    const {messages}=await call('admin-list-support');
+    $('#supportRows').innerHTML=messages.map(m=>`<div style="padding:10px 0;border-bottom:1px solid var(--lo)"><b>${m.email}</b>${m.emailFailed?' <span class="pill free">email failed</span>':''}<p class="sub" style="margin-top:4px">${(m.message||'').replace(/</g,'&lt;')}</p></div>`).join('')||'<p class="sub">No messages yet.</p>';
+  }catch(e){$('#supportRows').innerHTML='<p class="sub">'+e.message+'</p>'}
+}
+$('#nsend').onclick=async()=>{
+  $('#nmsg').textContent='';
+  const title=$('#ntitle').value.trim(),body=$('#nbody').value.trim();
+  if(!title||!body){$('#nmsg').textContent='Fill in a title and message.';return}
+  try{const d=await call('admin-notify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title,body})});$('#nmsg').textContent='Sent to '+d.sent+' users.'}
+  catch(e){$('#nmsg').textContent=e.message}
+};
+$('#esend').onclick=async()=>{
+  $('#emsg').textContent='';
+  const subject=$('#esub').value.trim(),message=$('#ebody').value.trim();
+  if(!subject||!message){$('#emsg').textContent='Fill in a subject and message.';return}
+  $('#esend').disabled=true;$('#emsg').textContent='Sending...';
+  try{const d=await call('admin-broadcast-email',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({subject,message})});$('#emsg').textContent=`Sent to ${d.sent} of ${d.total}.`}
+  catch(e){$('#emsg').textContent=e.message}
+  $('#esend').disabled=false;
+};
+</script></body></html>

@@ -48,7 +48,7 @@ exports.handler = async (event) => {
 
       const A = "abcdefghjkmnpqrstuvwxyz23456789";
       const newId = Array.from(crypto.randomBytes(14), (b) => A[b % A.length]).join("");
-      tx.set(db.collection("love").doc(newId), { to, from, msg, anim, theme, uid: decoded.uid, at: admin.firestore.FieldValue.serverTimestamp() });
+      tx.set(db.collection("love").doc(newId), { to, from, msg, anim, theme, uid: decoded.uid, fromPhoto: data.photoURL || null, at: admin.firestore.FieldValue.serverTimestamp() });
       tx.set(userRef, { loveCount: count + 1, email: decoded.email || null }, { merge: true });
       return newId;
     });

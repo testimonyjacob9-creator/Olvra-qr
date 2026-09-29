@@ -31,7 +31,7 @@ body{color:#fff;background:linear-gradient(135deg,#2b3cff,#8a4dff);display:flex;
 </style></head><body>
 <div id="fx"></div>
 <div class="vcard">
-  <div id="closed" hidden><div class="env pulse">💌</div><h1 id="hi"></h1><p id="fromline"></p><button class="btn" id="open">Open message</button></div>
+  <div id="closed" hidden><img id="fromPhoto" alt="" hidden style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:8px;border:2px solid rgba(255,255,255,.7)"><div class="env pulse" id="envIcon">💌</div><h1 id="hi"></h1><p id="fromline"></p><button class="btn" id="open">Open message</button></div>
   <div id="opened" hidden><p id="text"></p><p id="sig"></p><a class="btn" href="/love">Send one back</a></div>
   <div id="gone" hidden><div class="env">🔍</div><h1>Message not found</h1><p>The link may be wrong, or the message was removed.</p><a class="btn" href="/love">Write a message</a></div>
 </div>
@@ -48,6 +48,7 @@ if(!d){$('#gone').hidden=false}else{
   const t=T[d.theme]||T[0];document.body.style.background='linear-gradient(135deg,'+t[0]+','+t[1]+')';
   document.title='A message for '+d.to;
   $('#hi').textContent='A message for '+d.to;$('#fromline').textContent='From '+d.from;
+  if(d.fromPhoto){$('#fromPhoto').src=d.fromPhoto;$('#fromPhoto').hidden=false;$('#envIcon').hidden=true}
   $('#closed').hidden=false;$('#rep').hidden=false;
 }
 const still=matchMedia('(prefers-reduced-motion:reduce)').matches;

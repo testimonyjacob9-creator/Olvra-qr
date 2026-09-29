@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help & Support – Lumora</title>
+<meta name="description" content="How to use Lumora, frequently asked questions, and contact support.">
+<link rel="canonical" href="https://lumoral.netlify.app/help"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<style>
+.legal h2{font-size:1.05rem;margin:26px 0 8px}
+.legal p,.legal li{color:var(--dim)}
+.legal ul{padding-left:20px}
+.legal a{color:var(--accent)}
+.faq{border-radius:16px;box-shadow:6px 6px 14px var(--lo),-6px -6px 14px var(--hi);padding:4px 16px;margin-bottom:10px}
+.faq summary{padding:14px 0;font-weight:700;cursor:pointer;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq p{padding-bottom:14px;margin:0}
+#olive-btn{position:fixed;right:18px;bottom:96px;z-index:45;width:56px;height:56px;border-radius:50%;border:0;background:linear-gradient(135deg,#2b3cff,var(--rose));color:#fff;font-size:24px;box-shadow:6px 6px 16px var(--lo),-6px -6px 16px var(--hi);cursor:pointer}
+#olive-panel{position:fixed;right:14px;left:14px;bottom:160px;max-width:400px;margin:0 auto;z-index:45;background:var(--bg);border-radius:22px;box-shadow:8px 8px 20px var(--lo),-8px -8px 20px var(--hi);display:flex;flex-direction:column;max-height:60vh;overflow:hidden}
+#olive-head{padding:14px 18px;font-weight:800;display:flex;justify-content:space-between;align-items:center}
+#olive-log{flex:1;overflow-y:auto;padding:0 16px}
+.omsg{max-width:82%;padding:10px 14px;border-radius:14px;margin:6px 0;font-size:.9rem;line-height:1.4}
+.omsg.bot{background:var(--bg);box-shadow:inset 3px 3px 6px var(--lo),inset -3px -3px 6px var(--hi)}
+.omsg.me{background:var(--accent,#2b3cff);color:#fff;margin-left:auto}
+#olive-foot{display:flex;gap:8px;padding:12px 14px}
+#olive-in{flex:1;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:12px 14px;border-radius:12px;box-shadow:inset 4px 4px 8px var(--lo),inset -4px -4px 8px var(--hi)}
+#olive-send{border:0;border-radius:12px;padding:0 16px;background:var(--accent,#2b3cff);color:#fff;font-weight:700;cursor:pointer}
+</style>
+</head><body><div class="wrap legal">
+<h1>Help &amp; Support</h1>
+<p class="sub">How Lumora works, answers to common questions, and how to reach a human.</p>
+
+<h2>How to use Lumora</h2>
+<p><b>QR code:</b> open QR code, choose a link, text or WhatsApp chat, then download it as PNG or SVG.</p>
+<p><b>Business card:</b> open Business card, fill in your details, pick a style, and download the card or save it as a contact file.</p>
+<p><b>Love message:</b> open Love message, write it, pick an animation, then share the private link it gives you. Only someone with the link can open it.</p>
+
+<h2>Frequently asked questions</h2>
+<details class="faq"><summary>Is Lumora free?</summary><p>QR codes and business cards are always free. Love messages are free up to a limit, then Lumora Premium removes that limit for 30 days.</p></details>
+<details class="faq"><summary>Do I need an account?</summary><p>Yes. A free account lets Lumora keep track of your love-message limit and your premium status.</p></details>
+<details class="faq"><summary>Can I get a refund?</summary><p>Contact support below with your payment reference and we'll look into it.</p></details>
+<details class="faq"><summary>Someone sent me an inappropriate message. What do I do?</summary><p>Open the message and tap "Report this message" at the bottom. You can also message support below.</p></details>
+
+<h2>Still stuck?</h2>
+<p>Tap the chat bubble in the corner to talk to Olives, our support assistant.</p>
+<p style="margin-top:30px"><a href="/terms">Terms &amp; Conditions</a></p>
+</div>
+
+<button id="olive-btn" aria-label="Chat with Olives">🫒</button>
+<div id="olive-panel" hidden>
+  <div id="olive-head"><span>🫒 Olives</span><button id="olive-close" style="background:none;border:0;font-size:18px;cursor:pointer;color:var(--dim)">✕</button></div>
+  <div id="olive-log"></div>
+  <div id="olive-foot"><input id="olive-in" placeholder="Ask a question..."><button id="olive-send">Send</button></div>
+</div>
+
+<script type="module">
+import { mountNav } from "/nav.js";
+mountNav();
+import { auth } from "/firebase-init.js";
+
+const FAQ = {
+  premium: "Love messages are free up to 15, then Lumora Premium unlocks more for 30 days at a time, priced in your local currency.",
+  account: "You need a free account to use Lumora's tools. Tap Me in the bottom bar to sign in or create one.",
+  refund: "Send your payment reference here and I'll pass it to the team.",
+  report: "Open the message link and tap \"Report this message\" at the bottom of the page.",
+  qr: "Open QR code, choose a link, text or WhatsApp chat, then download it.",
+  card: "Open Business card, fill in your details, and download it or save the contact file.",
+};
+function reply(msg) {
+  const m = msg.toLowerCase();
+  if (m.includes("premium") || m.includes("price") || m.includes("cost")) return FAQ.premium;
+  if (m.includes("account") || m.includes("sign in") || m.includes("login")) return FAQ.account;
+  if (m.includes("refund") || m.includes("money back")) return FAQ.refund;
+  if (m.includes("report") || m.includes("abuse") || m.includes("inappropriate")) return FAQ.report;
+  if (m.includes("qr")) return FAQ.qr;
+  if (m.includes("card")) return FAQ.card;
+  return null;
+}
+const $ = s => document.querySelector(s);
+const log = $("#olive-log");
+function add(who, text) { const d = document.createElement("div"); d.className = "omsg " + who; d.textContent = text; log.append(d); log.scrollTop = log.scrollHeight; }
+add("bot", "👋 Hi, I'm Olives! Ask me about accounts, premium or reporting a message — or type your question and I'll pass it to a human if I can't answer it.");
+
+$("#olive-btn").onclick = () => { $("#olive-panel").hidden = !$("#olive-panel").hidden; };
+$("#olive-close").onclick = () => { $("#olive-panel").hidden = true; };
+
+let lastUnanswered = "";
+async function send() {
+  const v = $("#olive-in").value.trim();
+  if (!v) return;
+  $("#olive-in").value = "";
+  add("me", v);
+  const r = reply(v);
+  if (r) { add("bot", r); lastUnanswered = ""; return; }
+  lastUnanswered = v;
+  if (!auth.currentUser) { add("bot", "I'll need you signed in to pass this to our team. Tap Me to sign in, then ask again."); return; }
+  add("bot", "I've sent that to our support team — they'll get back to you by email.");
+  try {
+    await fetch("/.netlify/functions/contact-support", {
+      method: "POST",
+      headers: { "content-type": "application/json", Authorization: "Bearer " + await auth.currentUser.getIdToken() },
+      body: JSON.stringify({ message: v }),
+    });
+  } catch (e) {}
+}
+$("#olive-send").onclick = send;
+$("#olive-in").onkeydown = e => { if (e.key === "Enter") send(); };
+</script>
+</body></html>

@@ -2,7 +2,7 @@
 // BREVO_SENDER_EMAIL in the environment. Self-contained (no cross-repo deps).
 const BREVO_URL = "https://api.brevo.com/v3/smtp/email";
 
-async function sendEmail({ to, toName, subject, html }) {
+async function sendEmail({ to, toName, subject, html, replyTo }) {
   const apiKey = process.env.BREVO_API_KEY;
   const sender = process.env.BREVO_SENDER_EMAIL;
   if (!apiKey || !sender) throw new Error("BREVO_API_KEY / BREVO_SENDER_EMAIL not set.");
@@ -14,6 +14,7 @@ async function sendEmail({ to, toName, subject, html }) {
       to: [{ email: to, name: toName || to }],
       subject,
       htmlContent: html,
+      ...(replyTo ? { replyTo: { email: replyTo } } : {}),
     }),
   });
   if (!r.ok) {
@@ -59,4 +60,12 @@ function verifyCodeEmail({ name, code }) {
   };
 }
 
-module.exports = { sendEmail, resetCodeEmail, verifyCodeEmail };
+
+function supportEscalationEmail({ userEmail, message }) {
+  return {
+    subject: "New Lumora support message",
+    html: shell("Support", "New message from " + userEmail, `<p style="color:#1f2540;white-space:pre-wrap">${String(message || "").replace(/[<>&]/g, c => ({"<":"&lt;",">":"&gt;","&":"&amp;"}[c]))}</p><p style="color:#5d6684;font-size:13px;margin-top:18px">Reply directly to this email to answer ${userEmail}.</p>`),
+  };
+}
+
+module.exports = { sendEmail, resetCodeEmail, verifyCodeEmail, supportEscalationEmail };
