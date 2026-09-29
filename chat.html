@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chat – Lumora</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
+#gateScreen .e{font-size:44px;margin-bottom:6px}
+h2.sec{font-size:1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px}
+.badge{background:var(--rose);color:#fff;border-radius:99px;font-size:.72rem;padding:2px 8px;font-weight:800}
+.add{display:flex;gap:10px;margin-top:6px}.add input{flex:1;min-width:0}.add .btn{padding:12px 16px;flex:none}
+.note{min-height:1.3em;font-size:.85rem;margin-top:8px;color:var(--dim)}.note.bad{color:#c4243a;font-weight:600}
+.row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;margin-bottom:10px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.row.static{cursor:default}
+.av{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;display:inline-grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));font-size:.95rem}
+.av.sm{width:36px;height:36px;font-size:.8rem}
+.who{flex:1;min-width:0}.who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who small{display:block;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer;background:rgba(255,255,255,.55);color:var(--ink);border:1px solid var(--line)}
+.mini.pri{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+.empty{text-align:center;color:var(--dim);padding:26px 10px}
+/* conversation */
+#conv{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;height:100dvh;
+  background:radial-gradient(900px 500px at 12% -8%,#7d8bff55,transparent 60%),radial-gradient(700px 500px at 100% 0%,#ff8a6a4d,transparent 55%),#eef0fb}
+.chead{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--glass-hi);backdrop-filter:blur(16px)}
+.chead .who{font-weight:800}
+.back{border:0;background:none;font-size:22px;cursor:pointer;color:var(--ink);padding:4px 8px}
+#msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:78%;padding:9px 13px 6px;border-radius:18px;line-height:1.4}
+.m p{white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
+.m time{display:block;font-size:.66rem;opacity:.65;text-align:right;margin-top:2px}
+.m.me{align-self:flex-end;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-bottom-right-radius:6px}
+.m.them{align-self:flex-start;background:rgba(255,255,255,.75);border:1px solid var(--line);border-bottom-left-radius:6px}
+#compose{display:flex;gap:10px;padding:10px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--glass-hi);backdrop-filter:blur(16px)}
+#compose input{flex:1;min-width:0;border-radius:99px;padding:13px 18px}
+#compose .btn{border-radius:99px;padding:0 22px;flex:none}
+#rbox{margin:10px 14px 0;padding:14px;border-radius:18px}
+#rbox textarea{min-height:80px;margin-top:8px}
+#rbox .acts{margin-top:10px}
+</style>
+<link rel="stylesheet" href="/app.css">
+</head><body>
+<div id="gateScreen"><div class="glass card">
+  <div class="e">💬</div>
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to chat</p>
+  <p class="sub" style="margin-bottom:20px">Add friends and message them privately on Lumora.</p>
+  <a class="btn pri" id="gateLink" href="/login?next=/chat">Sign in or create account</a>
+</div></div>
+
+<div id="gatedApp" hidden><div class="wrap">
+  <h1>Chat</h1>
+  <p class="sub">Message your friends privately. Add someone by the email they signed up with.</p>
+  <div class="add"><input id="fe" type="email" inputmode="email" autocomplete="off" placeholder="friend@example.com" aria-label="Friend's email"><button class="btn pri" id="fadd" type="button">Add friend</button></div>
+  <p class="note" id="fmsg" role="status"></p>
+
+  <div id="reqSec" hidden>
+    <h2 class="sec">Friend requests <span class="badge" id="reqN">0</span></h2>
+    <div id="reqList"></div>
+  </div>
+  <h2 class="sec">Friends</h2>
+  <div id="friendList"></div>
+</div></div>
+
+<section id="conv" hidden aria-label="Conversation">
+  <div class="chead">
+    <button class="back" id="back" aria-label="Back to friends">←</button>
+    <span id="cav"></span><div class="who"><span id="cname"></span></div>
+    <button class="mini" id="rep" type="button">Report</button>
+    <button class="mini" id="rem" type="button">Remove</button>
+  </div>
+  <div id="rbox" class="glass" hidden>
+    <b>Report this chat</b>
+    <textarea id="rtext" maxlength="500" placeholder="What happened?"></textarea>
+    <p class="note" id="rnote"></p>
+    <div class="acts"><button class="btn pri" id="rsend" type="button">Send report</button><button class="btn" id="rcancel" type="button">Cancel</button></div>
+  </div>
+  <div id="msgs" aria-live="polite"></div>
+  <form id="compose" autocomplete="off"><input id="mi" maxlength="1000" placeholder="Write a message" aria-label="Message"><button class="btn pri" id="ms" type="submit">Send</button></form>
+</section>
+
+<script type="module">
+import {auth,db} from '/firebase-init.js';
+import {requireAuth} from '/gate.js';
+import {mountNav} from '/nav.js';
+import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {collection,query,where,orderBy,limit,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+mountNav();requireAuth();
+
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(fn,body){
+  const r=await fetch('/.netlify/functions/'+fn,{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await auth.currentUser.getIdToken()},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Something went wrong. Try again.');return d;
+}
+const initials=n=>(String(n).trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2)||'?').toUpperCase();
+const avatar=(i,c='')=>i.photoURL?`<img class="av ${c}" src="${esc(i.photoURL)}" alt="">`:`<span class="av ${c}" aria-hidden="true">${esc(initials(i.name))}</span>`;
+
+let me=null,items=[],current=null,unsub=null,deb=null;
+const later=()=>{clearTimeout(deb);deb=setTimeout(refresh,350)};
+
+async function refresh(){
+  try{({items}=await api('friends',{action:'list'}));render();
+    if(current){const it=items.find(x=>x.chatId===current.chatId);if(!it||it.status!=='accepted')closeConv();}
+    const h=location.hash.slice(1);if(h&&!current){const it=items.find(x=>x.chatId===h&&x.status==='accepted');if(it)openConv(it);}
+  }catch(e){$('#friendList').innerHTML=`<p class="empty">${esc(e.message)}</p>`}
+}
+function render(){
+  const req=items.filter(i=>i.incoming),rest=items.filter(i=>!i.incoming);
+  $('#reqSec').hidden=!req.length;$('#reqN').textContent=req.length;
+  $('#reqList').innerHTML=req.map(i=>`<div class="glass row static">${avatar(i)}<div class="who"><b>${esc(i.name)}</b><small>wants to be your friend</small></div><button class="mini pri" data-acc="${i.uid}">Accept</button><button class="mini" data-dec="${i.uid}">Decline</button></div>`).join('');
+  $('#friendList').innerHTML=rest.map(i=>i.status==='accepted'
+    ?`<button class="glass row" data-open="${esc(i.chatId)}">${avatar(i)}<div class="who"><b>${esc(i.name)}</b><small>${i.lastText?esc((i.lastFrom===me.uid?'You: ':'')+i.lastText):'Say hello'}</small></div></button>`
+    :`<div class="glass row static">${avatar(i)}<div class="who"><b>${esc(i.name)}</b><small>Request sent</small></div><button class="mini" data-cancel="${i.uid}">Cancel</button></div>`
+  ).join('')||'<p class="empty">No friends yet. Add someone by email to start chatting.</p>';
+}
+document.addEventListener('click',async e=>{
+  const t=e.target.closest('[data-open],[data-acc],[data-dec],[data-cancel]');if(!t)return;
+  try{
+    if(t.dataset.open)openConv(items.find(x=>x.chatId===t.dataset.open));
+    else if(t.dataset.acc)await api('friends',{action:'respond',uid:t.dataset.acc,accept:true}),refresh();
+    else if(t.dataset.dec)await api('friends',{action:'respond',uid:t.dataset.dec,accept:false}),refresh();
+    else await api('friends',{action:'remove',uid:t.dataset.cancel}),refresh();
+  }catch(er){$('#fmsg').className='note bad';$('#fmsg').textContent=er.message}
+});
+$('#fadd').onclick=async()=>{
+  const m=$('#fmsg'),email=$('#fe').value.trim();m.className='note';m.textContent='';
+  if(!email)return;$('#fadd').disabled=true;
+  try{const d=await api('friends',{action:'request',email});m.textContent=d.message;$('#fe').value='';refresh()}
+  catch(er){m.className='note bad';m.textContent=er.message}
+  $('#fadd').disabled=false;
+};
+$('#fe').onkeydown=e=>{if(e.key==='Enter')$('#fadd').click()};
+
+// ---- conversation ----
+const time=t=>t&&t.toDate?t.toDate().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
+function openConv(it){
+  if(!it)return;current=it;history.replaceState(null,'','#'+it.chatId);
+  $('#cav').innerHTML=avatar(it,'sm');$('#cname').textContent=it.name;
+  $('#conv').hidden=false;$('#rbox').hidden=true;$('#msgs').innerHTML='<p class="empty">Loading...</p>';
+  if(unsub)unsub();
+  unsub=onSnapshot(query(collection(db,'chats',it.chatId,'messages'),orderBy('at','desc'),limit(100)),snap=>{
+    const box=$('#msgs');
+    box.innerHTML=snap.docs.reverse().map(d=>{const m=d.data();return `<div class="m ${m.from===me.uid?'me':'them'}"><p>${esc(m.text)}</p><time>${time(m.at)}</time></div>`}).join('')||`<p class="empty">No messages yet. Say hello to ${esc(it.name)}.</p>`;
+    box.scrollTop=box.scrollHeight;
+  },()=>{$('#msgs').innerHTML='<p class="empty">Could not load this chat.</p>'});
+  $('#mi').focus();
+}
+function closeConv(){if(unsub){unsub();unsub=null}current=null;$('#conv').hidden=true;history.replaceState(null,'',location.pathname);$('#rem').textContent='Remove'}
+$('#back').onclick=closeConv;
+$('#compose').onsubmit=async e=>{
+  e.preventDefault();const i=$('#mi'),text=i.value.trim();if(!text||!current)return;
+  i.value='';$('#ms').disabled=true;
+  try{await api('send-message',{chatId:current.chatId,text})}
+  catch(er){i.value=text;$('#msgs').insertAdjacentHTML('beforeend',`<p class="empty" style="color:#c4243a">${esc(er.message)}</p>`);$('#msgs').scrollTop=1e9}
+  $('#ms').disabled=false;i.focus();
+};
+$('#rep').onclick=()=>{$('#rbox').hidden=!$('#rbox').hidden;$('#rnote').textContent=''};
+$('#rcancel').onclick=()=>$('#rbox').hidden=true;
+$('#rsend').onclick=async()=>{
+  const n=$('#rnote');n.className='note';n.textContent='';
+  try{const d=await api('submit-report',{chatId:current.chatId,reason:$('#rtext').value});n.textContent=d.message;$('#rtext').value='';setTimeout(()=>$('#rbox').hidden=true,1800)}
+  catch(er){n.className='note bad';n.textContent=er.message}
+};
+let rmTimer;
+$('#rem').onclick=async()=>{
+  const b=$('#rem');
+  if(b.textContent==='Remove'){b.textContent='Tap to confirm';rmTimer=setTimeout(()=>b.textContent='Remove',3000);return}
+  clearTimeout(rmTimer);b.textContent='Remove';
+  try{await api('friends',{action:'remove',uid:current.uid});closeConv();refresh()}catch(er){}
+};
+
+onAuthStateChanged(auth,u=>{
+  if(!u)return;me=u;refresh();
+  onSnapshot(query(collection(db,'friendships'),where('users','array-contains',u.uid)),later,()=>{});
+});
+</script>
+</body></html>

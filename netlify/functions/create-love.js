@@ -22,7 +22,7 @@ exports.handler = async (event) => {
   try {
     const m = (event.headers.authorization || event.headers.Authorization || "").match(/^Bearer (.+)$/i);
     if (!m) return out(401, { error: "Sign in first." });
-    const decoded = await admin.auth().verifyIdToken(m[1]).catch(() => null);
+    const decoded = await admin.auth().verifyIdToken(m[1], true).catch(() => null);
     if (!decoded) return out(401, { error: "Session expired. Sign in again." });
 
     let body;

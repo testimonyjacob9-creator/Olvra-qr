@@ -1,106 +1,191 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Admin – Lumora</title><meta name="robots" content="noindex,nofollow">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <style>
-.card{border-radius:20px;box-shadow:6px 6px 14px var(--lo),-6px -6px 14px var(--hi);padding:20px;margin:18px 0}
-.stat{font-size:1.8rem;font-weight:800}
-.tbl{width:100%;border-collapse:collapse;font-size:.85rem}
-.tbl th,.tbl td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--lo)}
-.pill{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:700}
+.wrap{max-width:760px!important}
+.top{display:flex;justify-content:space-between;align-items:center}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:18px 0}
+.stat{padding:14px;border-radius:18px;text-align:center}.stat b{display:block;font-size:1.6rem;font-weight:800}.stat span{font-size:.75rem;color:var(--dim)}
+.tabs{margin:6px 0 16px}.tabs .badge{margin-left:6px}
+.badge{background:var(--rose);color:#fff;border-radius:99px;font-size:.7rem;padding:1px 7px;font-weight:800}
+.card{padding:18px;border-radius:22px;margin-bottom:14px}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.72rem;font-weight:700}
 .pill.pre{background:#2b3cff22;color:#2b3cff}.pill.free{background:#00000012;color:var(--dim)}
-textarea{width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi);min-height:100px}
-</style><link rel="stylesheet" href="/app.css">
-</head><body><div class="wrap" style="max-width:760px">
-<a class="logo" href="/">lum<span>ora</span></a>
+.pill.bad{background:#e11d4822;color:#e11d48}.pill.ok{background:#0fb5a622;color:#0a8a7e}
+.urow{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.urow:last-child{border-bottom:0}
+.urow .who{flex:1 1 200px;min-width:0}.urow .who b{display:block;overflow-wrap:anywhere}.urow .who small{color:var(--dim)}
+.act{display:flex;flex-wrap:wrap;gap:6px}
+.mini{border-radius:10px;padding:7px 11px;font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;background:rgba(255,255,255,.55);color:var(--ink);border:1px solid var(--line)}
+.mini.pri{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+.mini.danger{color:#e11d48;border-color:#e11d4855}
+.mini:disabled{opacity:.5}
+.ctx{margin:10px 0;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.45);font-size:.85rem;max-height:180px;overflow:auto}
+.ctx div{margin:3px 0;overflow-wrap:anywhere}.ctx .t{color:var(--rose);font-weight:700}
+.meta{color:var(--dim);font-size:.8rem}
+.srch{margin-bottom:12px}
+.tools{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:var(--dim);font-size:.85rem}
+textarea{min-height:100px}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+<link rel="stylesheet" href="/app.css">
+</head><body><div class="wrap">
+<div class="top"><a class="logo" href="/">lum<span>ora</span></a><a class="mini" href="/">Back to site</a></div>
 <h1>Admin</h1>
 <div id="gate"><p>Checking access...</p></div>
+
 <div id="app" hidden>
+  <div class="stats">
+    <div class="glass stat"><b id="sUsers">–</b><span>Users</span></div>
+    <div class="glass stat"><b id="sPremium">–</b><span>Premium</span></div>
+    <div class="glass stat"><b id="sSusp">–</b><span>Suspended</span></div>
+    <div class="glass stat"><b id="sRep">–</b><span>Open reports</span></div>
+  </div>
+  <div class="seg tabs" role="tablist">
+    <button data-tab="users" aria-pressed="true">Users</button>
+    <button data-tab="reports" aria-pressed="false">Reports<span class="badge" id="repBadge" hidden>0</span></button>
+    <button data-tab="messages" aria-pressed="false">Messages</button>
+  </div>
 
-<div class="card">
-  <div class="stat" id="statUsers">–</div><div class="sub">Users</div>
-</div>
-<div class="card">
-  <div class="stat" id="statPremium">–</div><div class="sub">Active premium</div>
-</div>
+  <section id="tab-users">
+    <input class="srch" id="q" type="search" placeholder="Search by email or name" aria-label="Search users">
+    <div class="card" id="userList"><p class="sub">Loading...</p></div>
+  </section>
 
-<div class="card">
-  <h2 style="margin-bottom:10px">Send a notification bell</h2>
-  <label for="ntitle">Title</label><input id="ntitle" placeholder="New feature!">
-  <label for="nbody">Message</label><textarea id="nbody" placeholder="Tell users what's new..."></textarea>
-  <div class="acts"><button class="btn pri" id="nsend">Send to everyone</button></div>
-  <p id="nmsg" class="sub"></p>
-</div>
+  <section id="tab-reports" hidden>
+    <div class="tools"><span id="repCount"></span><label style="margin:0;display:flex;gap:8px;align-items:center"><input type="checkbox" id="showAll" style="width:auto"> Show closed</label></div>
+    <div id="repList"><p class="sub">Loading...</p></div>
+  </section>
 
-<div class="card">
-  <h2 style="margin-bottom:10px">Send a broadcast email</h2>
-  <label for="esub">Subject</label><input id="esub" placeholder="Something new on Lumora">
-  <label for="ebody">Message</label><textarea id="ebody" placeholder="Plain text — Lumora adds the design."></textarea>
-  <div class="acts"><button class="btn pri" id="esend">Email everyone</button></div>
-  <p id="emsg" class="sub"></p>
-</div>
-
-<div class="card">
-  <h2 style="margin-bottom:10px">Users</h2>
-  <table class="tbl"><thead><tr><th>Email</th><th>Status</th><th>Love msgs</th></tr></thead><tbody id="userRows"></tbody></table>
-</div>
-
-<div class="card">
-  <h2 style="margin-bottom:10px">Support inbox</h2>
-  <div id="supportRows"></div>
-</div>
-
+  <section id="tab-messages" hidden>
+    <div class="card">
+      <h2 style="margin-bottom:10px">Send a notification</h2>
+      <label for="ntitle">Title</label><input id="ntitle" placeholder="New feature!">
+      <label for="nbody">Message</label><textarea id="nbody" placeholder="Tell users what's new..."></textarea>
+      <div class="acts"><button class="btn pri" id="nsend">Send to everyone</button></div><p id="nmsg" class="sub"></p>
+    </div>
+    <div class="card">
+      <h2 style="margin-bottom:10px">Send a broadcast email</h2>
+      <label for="esub">Subject</label><input id="esub" placeholder="Something new on Lumora">
+      <label for="ebody">Message</label><textarea id="ebody" placeholder="Plain text. Lumora adds the design."></textarea>
+      <div class="acts"><button class="btn pri" id="esend">Email everyone</button></div><p id="emsg" class="sub"></p>
+    </div>
+    <div class="card"><h2 style="margin-bottom:10px">Support inbox</h2><div id="supportRows"></div></div>
+  </section>
 </div></div>
+
 <script type="module">
-import { auth } from "/firebase-init.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-const $=s=>document.querySelector(s);
-async function call(fn, opts={}) {
-  const u=auth.currentUser;
-  const r=await fetch('/.netlify/functions/'+fn,{...opts,headers:{...(opts.headers||{}),Authorization:'Bearer '+await u.getIdToken()}});
-  const d=await r.json(); if(!r.ok) throw new Error(d.error||'Request failed'); return d;
+import {auth} from "/firebase-init.js";
+import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function call(fn,body){
+  const o={headers:{Authorization:'Bearer '+await auth.currentUser.getIdToken()}};
+  if(body){o.method='POST';o.headers['content-type']='application/json';o.body=JSON.stringify(body)}
+  const r=await fetch('/.netlify/functions/'+fn,o);const d=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(d.error||'Request failed');return d;
 }
-onAuthStateChanged(auth, async u=>{
-  if(!u){$('#gate').innerHTML='<p>Sign in first, then reopen this page.</p><a class="btn pri" href="/account?next=/admin">Sign in</a>';return}
-  try{
-    const {isAdmin}=await call('admin-check');
-    if(!isAdmin){$('#gate').innerHTML='<p>This account does not have admin access.</p>';return}
-  }catch(e){$('#gate').innerHTML='<p>'+(e.message||'Could not verify access.')+'</p>';return}
-  $('#gate').hidden=true;$('#app').hidden=false;
-  load();
+let users=[],reports=[];
+onAuthStateChanged(auth,async u=>{
+  if(!u){$('#gate').innerHTML='<p class="sub">Sign in with your admin account first.</p><div class="acts"><a class="btn pri" href="/login?next=/admin">Sign in</a></div>';return}
+  try{const {isAdmin}=await call('admin-check');if(!isAdmin){$('#gate').innerHTML='<p>This account does not have admin access.</p>';return}}
+  catch(e){$('#gate').textContent=e.message||'Could not verify access.';return}
+  $('#gate').hidden=true;$('#app').hidden=false;loadUsers();loadReports();loadSupport();
 });
-async function load(){
-  try{
-    const {users}=await call('admin-list-users');
-    $('#statUsers').textContent=users.length;
-    $('#statPremium').textContent=users.filter(u=>u.premiumUntil&&new Date(u.premiumUntil)>new Date()).length;
-    $('#userRows').innerHTML=users.map(u=>{
-      const active=u.premiumUntil&&new Date(u.premiumUntil)>new Date();
-      return `<tr><td>${u.email||u.uid.slice(0,8)}</td><td><span class="pill ${active?'pre':'free'}">${active?'Premium':'Free'}</span></td><td>${u.loveCount||0}</td></tr>`;
-    }).join('')||'<tr><td colspan=3>No users yet.</td></tr>';
-  }catch(e){$('#userRows').innerHTML='<tr><td colspan=3>'+e.message+'</td></tr>'}
+$$('.tabs button').forEach(b=>b.onclick=()=>{
+  $$('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  ['users','reports','messages'].forEach(t=>$('#tab-'+t).hidden=t!==b.dataset.tab);
+});
+
+// ---- users ----
+const active=u=>u.premiumUntil&&new Date(u.premiumUntil)>new Date();
+async function loadUsers(){
+  try{({users}=await call('admin-list-users'))}catch(e){$('#userList').innerHTML=`<p class="sub">${esc(e.message)}</p>`;return}
+  users.sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+  $('#sUsers').textContent=users.length;$('#sPremium').textContent=users.filter(active).length;$('#sSusp').textContent=users.filter(u=>u.suspended).length;
+  renderUsers();
+}
+function renderUsers(){
+  const q=$('#q').value.trim().toLowerCase();
+  const list=users.filter(u=>!q||(u.email||'').toLowerCase().includes(q)||(u.displayName||'').toLowerCase().includes(q));
+  $('#userList').innerHTML=list.map(u=>{
+    const st=u.suspended?'<span class="pill bad">Suspended</span>':active(u)?`<span class="pill pre">Premium until ${new Date(u.premiumUntil).toLocaleDateString()}</span>`:'<span class="pill free">Free</span>';
+    return `<div class="urow"><div class="who"><b>${esc(u.email||u.uid)}</b><small>${esc(u.displayName||'')}${u.displayName?' · ':''}${u.loveCount||0} love messages</small><div style="margin-top:4px">${st}</div></div>
+    <div class="act">
+      <button class="mini pri" data-u="${esc(u.uid)}" data-a="grant" data-d="30">+30 days</button>
+      <button class="mini" data-u="${esc(u.uid)}" data-a="grant" data-d="365">+1 year</button>
+      ${active(u)?`<button class="mini" data-u="${esc(u.uid)}" data-a="revoke">Remove premium</button>`:''}
+      <button class="mini danger" data-u="${esc(u.uid)}" data-a="${u.suspended?'unsuspend':'suspend'}">${u.suspended?'Restore':'Suspend'}</button>
+    </div></div>`;
+  }).join('')||'<p class="sub">No users found.</p>';
+}
+$('#q').oninput=renderUsers;
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-u]');if(!b)return;
+  const a=b.dataset.a;
+  if(a==='suspend'&&b.dataset.armed!=='1'){b.dataset.armed='1';b.textContent='Tap to confirm';setTimeout(()=>{b.dataset.armed='';b.textContent='Suspend'},3000);return}
+  b.disabled=true;
+  try{await call('admin-user-action',{uid:b.dataset.u,action:a,days:b.dataset.d});await loadUsers()}
+  catch(er){b.disabled=false;alert(er.message)}
+});
+
+// ---- reports ----
+async function loadReports(){
+  try{({reports}=await call('admin-reports'))}catch(e){$('#repList').innerHTML=`<p class="sub">${esc(e.message)}</p>`;return}
+  const open=reports.filter(r=>r.status==='open').length;
+  $('#sRep').textContent=open;$('#repBadge').textContent=open;$('#repBadge').hidden=!open;
+  renderReports();
+}
+function renderReports(){
+  const all=$('#showAll').checked,list=reports.filter(r=>all||r.status==='open');
+  $('#repCount').textContent=list.length+' report'+(list.length===1?'':'s');
+  $('#repList').innerHTML=list.map(r=>{
+    const when=r.at?new Date(r.at).toLocaleString():'';
+    const st=r.status==='open'?'<span class="pill bad">Open</span>':`<span class="pill ok">${esc(r.status)}</span>`;
+    const key=`data-s="${r.source}" data-r="${esc(r.id)}"`;
+    let body='',acts='';
+    if(r.kind==='chat'){
+      body=`<p><b>Chat report</b> ${st}</p><p class="meta">${esc(r.reporterEmail||'Unknown')} reported ${esc(r.targetEmail||r.targetUid)} · ${when}</p><p style="margin-top:8px">${esc(r.reason)}</p>
+        <div class="ctx">${(r.context||[]).map(m=>`<div><span class="t">${m.from===r.targetUid?'Reported user':'Reporter'}:</span> ${esc(m.text)}</div>`).join('')||'No messages.'}</div>`;
+      acts=`<button class="mini danger" data-u="${esc(r.targetUid)}" data-a="suspend">Suspend user</button>`;
+    }else{
+      body=`<p><b>Love message report</b> ${st}</p><p class="meta">${when}${r.love?` · from ${esc(r.love.from)} to ${esc(r.love.to)}`:''}</p>
+        <div class="ctx">${r.love?esc(r.love.msg):'This message was already removed.'}</div>`;
+      acts=r.love?`<button class="mini danger" ${key} data-x="remove-love">Remove message</button>`:'';
+      if(r.love&&r.love.uid)acts+=`<button class="mini danger" data-u="${esc(r.love.uid)}" data-a="suspend">Suspend sender</button>`;
+    }
+    const close=r.status==='open'?`<button class="mini pri" ${key} data-x="resolve">Resolve</button><button class="mini" ${key} data-x="dismiss">Dismiss</button>`:'';
+    return `<div class="glass card">${body}<div class="act">${acts}${close}</div></div>`;
+  }).join('')||'<p class="sub">No open reports. Nice.</p>';
+}
+$('#showAll').onchange=renderReports;
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-x]');if(!b)return;b.disabled=true;
+  try{await call('admin-reports',{source:b.dataset.s,id:b.dataset.r,action:b.dataset.x});await loadReports()}
+  catch(er){b.disabled=false;alert(er.message)}
+});
+
+// ---- messages ----
+async function loadSupport(){
   try{
     const {messages}=await call('admin-list-support');
-    $('#supportRows').innerHTML=messages.map(m=>`<div style="padding:10px 0;border-bottom:1px solid var(--lo)"><b>${m.email}</b>${m.emailFailed?' <span class="pill free">email failed</span>':''}<p class="sub" style="margin-top:4px">${(m.message||'').replace(/</g,'&lt;')}</p></div>`).join('')||'<p class="sub">No messages yet.</p>';
-  }catch(e){$('#supportRows').innerHTML='<p class="sub">'+e.message+'</p>'}
+    $('#supportRows').innerHTML=messages.map(m=>`<div style="padding:10px 0;border-bottom:1px solid var(--line)"><b>${esc(m.email)}</b>${m.emailFailed?' <span class="pill free">email failed</span>':''}<p class="sub" style="margin-top:4px">${esc(m.message)}</p></div>`).join('')||'<p class="sub">No messages yet.</p>';
+  }catch(e){$('#supportRows').innerHTML=`<p class="sub">${esc(e.message)}</p>`}
 }
 $('#nsend').onclick=async()=>{
-  $('#nmsg').textContent='';
-  const title=$('#ntitle').value.trim(),body=$('#nbody').value.trim();
+  const title=$('#ntitle').value.trim(),body=$('#nbody').value.trim();$('#nmsg').textContent='';
   if(!title||!body){$('#nmsg').textContent='Fill in a title and message.';return}
-  try{const d=await call('admin-notify',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({title,body})});$('#nmsg').textContent='Sent to '+d.sent+' users.'}
-  catch(e){$('#nmsg').textContent=e.message}
+  try{const d=await call('admin-notify',{title,body});$('#nmsg').textContent='Sent to '+d.sent+' users.'}catch(e){$('#nmsg').textContent=e.message}
 };
 $('#esend').onclick=async()=>{
-  $('#emsg').textContent='';
-  const subject=$('#esub').value.trim(),message=$('#ebody').value.trim();
+  const subject=$('#esub').value.trim(),message=$('#ebody').value.trim();$('#emsg').textContent='';
   if(!subject||!message){$('#emsg').textContent='Fill in a subject and message.';return}
   $('#esend').disabled=true;$('#emsg').textContent='Sending...';
-  try{const d=await call('admin-broadcast-email',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({subject,message})});$('#emsg').textContent=`Sent to ${d.sent} of ${d.total}.`}
-  catch(e){$('#emsg').textContent=e.message}
+  try{const d=await call('admin-broadcast-email',{subject,message});$('#emsg').textContent=`Sent to ${d.sent} of ${d.total}.`}catch(e){$('#emsg').textContent=e.message}
   $('#esend').disabled=false;
 };
 </script></body></html>

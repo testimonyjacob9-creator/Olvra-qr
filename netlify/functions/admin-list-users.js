@@ -14,7 +14,8 @@ exports.handler = async (event) => {
       return {
         uid: d.id, email: u.email || null, displayName: u.displayName || null, photoURL: u.photoURL || null,
         premiumUntil: u.premiumUntil ? u.premiumUntil.toDate().toISOString() : null,
-        loveCount: u.loveCount || 0,
+        loveCount: u.loveCount || 0, suspended: !!u.suspended,
+        createdAt: u.createdAt && u.createdAt.toDate ? u.createdAt.toDate().toISOString() : null,
       };
     });
     return ok({ users, count: users.length });

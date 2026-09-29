@@ -278,8 +278,7 @@ async function verifyPayment(u,transactionId,txRef,country){
   refresh(u);
 }
 onAuthStateChanged(auth,async u=>{
-  if(!u){showAuth('out');return}
-  if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){showAuth('verify');sendVerify();return}
+  if(!u){location.replace('/login?next=/account');return}
   showAuth('in');await refresh(u);watchNotifications(u);initPushToggle();
   // Some payment methods (bank transfer, USSD) leave the inline checkout and
   // come back via redirect instead of firing the in-page callback. Flutterwave

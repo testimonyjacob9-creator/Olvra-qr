@@ -28,7 +28,7 @@ const mask = (email) => { const [l, d] = email.split("@"); return `${l.slice(0, 
 async function bearerUser(event) {
   const m = (event.headers.authorization || event.headers.Authorization || "").match(/^Bearer (.+)$/i);
   if (!m) return null;
-  return admin.auth().verifyIdToken(m[1]).catch(() => null);
+  return admin.auth().verifyIdToken(m[1], true).catch(() => null);
 }
 
 exports.handler = async (event) => {

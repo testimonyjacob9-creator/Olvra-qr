@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Sign in – Lumora</title>
+<meta name="description" content="Sign in or create your free Lumora account.">
+<link rel="canonical" href="https://lumoral.netlify.app/login"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/love.css">
+<style>
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.auth{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;padding:24px 20px}
+.auth .logo{text-align:center;font-size:1.7rem;margin-bottom:22px;display:block}
+.auth .card{padding:28px 24px;border-radius:28px}
+.auth h1{font-size:1.6rem;margin:0 0 6px}
+.auth .seg{margin:18px 0 4px}
+.auth .seg button{padding:11px 6px}
+.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:.8rem;margin:20px 0 0}
+.or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
+.fine{text-align:center;color:var(--dim);font-size:.8rem;margin-top:18px}.fine a{color:var(--accent)}
+.auth .txt{display:block;margin:14px auto 0}
+.pw{position:relative}.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--dim);font:inherit;font-weight:700;font-size:.8rem;cursor:pointer;padding:8px}
+.pw input{padding-right:64px}
+</style>
+<link rel="stylesheet" href="/app.css">
+</head><body>
+<main class="auth">
+<a class="logo" href="/">lum<span>ora</span></a>
+<div class="glass card">
+
+  <div id="pMain">
+    <h1 id="ttl">Welcome back</h1>
+    <p class="sub" id="sub">Sign in to use Lumora.</p>
+    <div class="seg" role="group" aria-label="Sign in or create account">
+      <button type="button" id="tIn" aria-pressed="true">Sign in</button>
+      <button type="button" id="tUp" aria-pressed="false">Create account</button>
+    </div>
+    <label for="em">Email</label><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
+    <label for="pw">Password</label>
+    <div class="pw"><input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><button type="button" id="showPw" aria-label="Show password">Show</button></div>
+    <div class="acts"><button class="btn pri" id="go">Sign in</button></div>
+    <button class="txt" id="forgot" type="button">Forgot password?</button>
+    <div class="or"><span>or</span></div>
+    <div class="acts" style="margin-top:16px"><button class="btn" id="google" type="button">Continue with Google</button></div>
+  </div>
+
+  <div id="pReset" hidden>
+    <h1>Reset password</h1>
+    <div id="r1">
+      <p class="sub">We'll email you a 6-digit code.</p>
+      <label for="rem">Account email</label><input id="rem" type="email" inputmode="email" autocomplete="email">
+      <div class="acts"><button class="btn pri" id="rsend" type="button">Send code</button><button class="btn" id="rback" type="button">Back</button></div>
+    </div>
+    <div id="r2" hidden>
+      <p class="sub" id="rmsg"></p>
+      <label for="rcode">6-digit code</label><input id="rcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+      <label for="rnew">New password</label><input id="rnew" type="password" autocomplete="new-password">
+      <div class="acts"><button class="btn pri" id="rconfirm" type="button">Set new password</button><button class="btn" id="rresend" type="button">Resend code</button></div>
+    </div>
+  </div>
+
+  <div id="pVerify" hidden>
+    <h1>Verify your email</h1>
+    <p class="sub" id="vmsg">Sending your code...</p>
+    <label for="vcode">6-digit code</label><input id="vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+    <div class="acts"><button class="btn pri" id="vconfirm" type="button">Verify email</button><button class="btn" id="vresend" type="button">Resend code</button></div>
+    <button class="txt" id="vskip" type="button">Skip for now</button>
+  </div>
+
+  <p id="err" role="alert"></p>
+</div>
+<p class="fine">By continuing you agree to the <a href="/terms">Terms &amp; Conditions</a>.</p>
+</main>
+
+<script type="module">
+import {auth} from '/firebase-init.js';
+import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
+const FN='/.netlify/functions/auth-code';
+const FRIENDLY={
+  'auth/invalid-email':'That email address looks invalid.',
+  'auth/missing-password':'Enter a password.',
+  'auth/weak-password':'Password must be at least 6 characters.',
+  'auth/email-already-in-use':'An account already exists with that email. Sign in instead.',
+  'auth/invalid-credential':'Incorrect email or password.',
+  'auth/wrong-password':'Incorrect email or password.',
+  'auth/user-not-found':'No account found with that email.',
+  'auth/user-disabled':'This account has been suspended. Contact support if you think this is a mistake.',
+  'auth/too-many-requests':'Too many attempts. Wait a bit and try again.',
+  'auth/network-request-failed':'Network error. Check your connection and try again.',
+  'auth/unauthorized-domain':'This site is not authorized for sign-in yet. Add it in Firebase → Authentication → Settings → Authorized domains.',
+  'auth/operation-not-allowed':'This sign-in method is not turned on in Firebase → Authentication → Sign-in method.'
+};
+const run=fn=>async()=>{err();try{await fn()}catch(e){err(FRIENDLY[e.code]||e.message||'Something went wrong. Try again.')}};
+const panel=p=>{err();['pMain','pReset','pVerify'].forEach(id=>$('#'+id).hidden=id!==p)};
+
+// ---- mode: sign in / create account ----
+let mode='in';
+function setMode(m){
+  mode=m;err();
+  $('#tIn').setAttribute('aria-pressed',m==='in');$('#tUp').setAttribute('aria-pressed',m==='up');
+  $('#ttl').textContent=m==='in'?'Welcome back':'Create your account';
+  $('#sub').textContent=m==='in'?'Sign in to use Lumora.':'Free to start. It only takes a moment.';
+  $('#go').textContent=m==='in'?'Sign in':'Create account';
+  $('#pw').autocomplete=m==='in'?'current-password':'new-password';
+  $('#forgot').hidden=m!=='in';
+}
+$('#tIn').onclick=()=>setMode('in');$('#tUp').onclick=()=>setMode('up');
+if(new URLSearchParams(location.search).get('mode')==='signup')setMode('up');
+$('#showPw').onclick=()=>{const p=$('#pw'),s=p.type==='password';p.type=s?'text':'password';$('#showPw').textContent=s?'Hide':'Show'};
+$('#go').onclick=run(async()=>{
+  const email=$('#em').value.trim(),pw=$('#pw').value;
+  if(!email||!pw){err('Enter your email and password.');return}
+  $('#go').disabled=true;
+  try{await(mode==='in'?signInWithEmailAndPassword:createUserWithEmailAndPassword)(auth,email,pw)}finally{$('#go').disabled=false}
+});
+$('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+
+// ---- Google ----
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+$('#google').onclick=run(async()=>{
+  const p=new GoogleAuthProvider();
+  if(isMobile){await signInWithRedirect(auth,p);return}
+  try{await signInWithPopup(auth,p)}catch(e){
+    if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request')await signInWithRedirect(auth,p);else throw e;
+  }
+});
+getRedirectResult(auth).catch(e=>err(FRIENDLY[e.code]||('Google sign-in failed: '+(e.message||e.code||'unknown error'))));
+
+// ---- forgot password ----
+$('#forgot').onclick=()=>{$('#rem').value=$('#em').value;panel('pReset');$('#r1').hidden=false;$('#r2').hidden=true};
+$('#rback').onclick=()=>panel('pMain');
+async function post(body,token){
+  const r=await fetch(FN,{method:'POST',headers:{'content-type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)});
+  const d=await r.json().catch(()=>({}));return{ok:r.ok,d};
+}
+async function sendReset(){
+  err();const email=$('#rem').value.trim();if(!email){err('Enter your account email.');return}
+  const {ok,d}=await post({action:'send-reset',email});
+  if(!ok){err(d.error||'Could not send the code.');return}
+  $('#rmsg').textContent='Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.';
+  $('#r1').hidden=true;$('#r2').hidden=false;
+}
+$('#rsend').onclick=sendReset;$('#rresend').onclick=sendReset;
+$('#rconfirm').onclick=async()=>{
+  err();const email=$('#rem').value.trim(),code=$('#rcode').value.trim(),newPassword=$('#rnew').value;
+  if(!code||newPassword.length<6){err('Enter the code and a password of at least 6 characters.');return}
+  const {ok,d}=await post({action:'confirm-reset',email,code,newPassword});
+  if(!ok){err(d.error||'Could not reset the password.');return}
+  panel('pMain');$('#em').value=email;
+  try{await signInWithEmailAndPassword(auth,email,newPassword)}catch(e){err('Password updated. Sign in with your new password.')}
+};
+
+// ---- email verification ----
+let verifySent=false;
+async function sendVerify(){
+  const u=auth.currentUser;if(!u)return;
+  const {ok,d}=await post({action:'send-verify'},await u.getIdToken());
+  $('#vmsg').textContent=ok?('Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.'):(d.error||'Could not send the code.');
+}
+$('#vresend').onclick=sendVerify;
+$('#vskip').onclick=()=>finish();
+$('#vconfirm').onclick=async()=>{
+  err();const u=auth.currentUser,code=$('#vcode').value.trim();if(!u||!code)return;
+  const {ok,d}=await post({action:'confirm-verify',code},await u.getIdToken());
+  if(!ok){err(d.error||'Incorrect code.');return}
+  await u.reload().catch(()=>{});finish();
+};
+
+// ---- after sign-in: make sure the account record exists, then go on ----
+let finishing=false;
+async function finish(){
+  if(finishing)return;finishing=true;
+  const u=auth.currentUser;
+  try{
+    const r=await fetch('/.netlify/functions/ensure-user',{method:'POST',headers:{Authorization:'Bearer '+await u.getIdToken()}});
+    if(r.status===401||r.status===403){await auth.signOut();finishing=false;panel('pMain');err(FRIENDLY['auth/user-disabled']);return}
+    if(r.ok)sessionStorage.setItem('lumora_ok_'+u.uid,'1');
+  }catch(e){}
+  const n=new URLSearchParams(location.search).get('next');
+  location.replace(n&&n.startsWith('/')&&!n.startsWith('//')?n:'/');
+}
+onAuthStateChanged(auth,u=>{
+  if(!u)return;
+  if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){
+    panel('pVerify');if(!verifySent){verifySent=true;sendVerify()}return;
+  }
+  finish();
+});
+</script>
+</body></html>

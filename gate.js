@@ -14,7 +14,7 @@ export function requireAuth() {
     } else {
       const next = encodeURIComponent(location.pathname);
       const link = document.getElementById('gateLink');
-      if (link) link.href = '/account?next=' + next;
+      if (link) link.href = '/login?next=' + next;
       if (gate) gate.hidden = false;
       if (app) app.hidden = true;
     }
