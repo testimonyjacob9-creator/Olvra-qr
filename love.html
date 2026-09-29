@@ -28,8 +28,9 @@ body{--veil:linear-gradient(180deg,rgba(255,236,244,.35),rgba(255,255,255,.18) 4
 .pulse{display:inline-block;animation:pulse 1.15s ease-in-out infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 </style><link rel="stylesheet" href="/app.css">
-</head><body class="bg-golden">
-<div id="gateScreen"><div class="glass card">
+<script>try{if(localStorage.getItem("lumora_authed"))document.documentElement.classList.add("authed")}catch(e){}</script>
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body class="bg-golden">
+<div id="gateScreen" hidden><div class="glass card">
   <div class="e">🔒</div>
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
   <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>

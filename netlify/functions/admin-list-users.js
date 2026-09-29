@@ -12,7 +12,7 @@ exports.handler = async (event) => {
     const users = snap.docs.map((d) => {
       const u = d.data();
       return {
-        uid: d.id, email: u.email || null, displayName: u.displayName || null, photoURL: u.photoURL || null,
+        uid: d.id, email: u.email || null, displayName: u.displayName || null, phone: u.phone || null, photoURL: u.photoURL || null,
         premiumUntil: u.premiumUntil ? u.premiumUntil.toDate().toISOString() : null,
         loveCount: u.loveCount || 0, suspended: !!u.suspended, country: u.country || null,
         trialEndsAt: u.trialEndsAt ? u.trialEndsAt.toDate().toISOString() : null,

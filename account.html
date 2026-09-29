@@ -26,12 +26,18 @@
 .notif b{display:block;font-size:.88rem}.notif span{color:var(--dim);font-size:.82rem}
 </style>
 <link rel="stylesheet" href="/app.css">
-</head><body><div class="wrap">
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body><div class="wrap">
 <h1>Me</h1>
 <div id="avatarWrap">
   <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" class="glass">🙂</div>
   <div><button class="btn" id="avatarBtn" type="button">Change photo</button><input id="avatarFile" type="file" accept="image/*"><p class="sub" id="avatarMsg" style="margin-top:6px"></p></div>
 </div>
+
+<label for="nameIn">Full name</label>
+<input id="nameIn" type="text" placeholder="Your name" autocomplete="name">
+<label for="phoneIn">Phone number</label>
+<input id="phoneIn" type="tel" placeholder="e.g. 08012345678" autocomplete="tel">
+<p class="sub" id="nameMsg" style="margin:4px 0 18px"></p>
 
 <div class="glass plancard" id="planCard">
   <div class="kicker" id="planKicker">Loading...</div>
@@ -54,7 +60,7 @@
 <button class="txt" id="signout">Sign out</button>
 <p id="err" role="alert"></p>
 
-<div id="notifSection" hidden>
+<div id="notifSection">
   <h2 style="font-size:1.1rem;margin:26px 0 8px">Push notifications</h2>
   <div class="row" style="margin-bottom:8px">
     <span class="sub" id="pushLabel" style="margin:0">Get notified on this device</span>
@@ -62,8 +68,7 @@
       <input type="checkbox" id="pushToggle" style="width:44px;height:26px;accent-color:var(--accent)">
     </label>
   </div>
-  <h2 id="notifications" style="font-size:1.1rem;margin:22px 0 12px">Notifications</h2>
-  <div id="notifList"><p class="sub">No notifications yet.</p></div>
+  <a class="btn" href="/notifications" style="display:block;margin-top:18px;text-align:center">View all notifications</a>
 </div>
 
 <p style="margin-top:30px"><a href="/terms" style="color:var(--accent)">Terms &amp; Conditions</a> · <a href="/help" style="color:var(--accent)">Help</a></p>
@@ -102,6 +107,32 @@ async function refresh(u){
   $('#pay').textContent=active&&!trial?'Add 30 more days':'Pay for Premium';
   const photo=data.photoURL||u.photoURL;
   if(photo){$('#avatarImg').src=photo;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true}
+  $('#nameIn').value=data.displayName||u.displayName||'';
+  $('#phoneIn').value=data.phone||'';
+}
+
+// ---- Name + phone: name is user-writable directly (Firestore rules allow
+// displayName), phone goes through ensure-user since rules don't allow it
+// as a direct client write. ----
+function wireProfileFields(u){
+  $('#nameIn').onchange=async()=>{
+    const name=$('#nameIn').value.trim();
+    if(!name)return;
+    try{
+      await setDoc(doc(db,'users',u.uid),{displayName:name},{merge:true});
+      const {updateProfile}=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
+      await updateProfile(u,{displayName:name});
+      $('#nameMsg').textContent='Saved.';
+    }catch(e){$('#nameMsg').textContent='Could not save. Try again.'}
+  };
+  $('#phoneIn').onchange=async()=>{
+    const phone=$('#phoneIn').value.trim();
+    if(!phone)return;
+    try{
+      await fetch('/.netlify/functions/ensure-user',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({phone,changePhone:true})});
+      $('#nameMsg').textContent='Saved.';
+    }catch(e){$('#nameMsg').textContent='Could not save. Try again.'}
+  };
 }
 
 // ---- Profile photo ----
@@ -209,11 +240,11 @@ async function verifyPayment(u,transactionId,txRef,country){
     const d=await res.json();
     if(!res.ok)throw new Error(d.error);
   }catch(e){err(e.message||'Could not verify the payment. If you were charged, contact support.')}
-  refresh(u);
+  refresh(u);wireProfileFields(u);
 }
 onAuthStateChanged(auth,async u=>{
   if(!u){location.replace('/login?next=/account');return}
-  await refresh(u);watchNotifications(u);initPushToggle();
+  await refresh(u);wireProfileFields(u);initPushToggle();
   // Some payment methods (bank transfer, USSD) leave the inline checkout and
   // come back via redirect instead of firing the in-page callback. Flutterwave
   // appends these params to redirect_url, so pick up the payment here too.

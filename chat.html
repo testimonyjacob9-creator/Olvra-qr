@@ -15,26 +15,25 @@ h2.sec{font-size:1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px
 .note{min-height:1.3em;font-size:.85rem;margin-top:8px;color:var(--dim)}.note.bad{color:#c4243a;font-weight:600}
 .row{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:18px;margin-bottom:10px;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
 .row.static{cursor:default}
-.av{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;display:inline-grid;place-items:center;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));font-size:.95rem}
+.av{width:44px;height:44px;border-radius:50%;flex:none;object-fit:cover;display:inline-grid;place-items:center;font-weight:800;color:#fff;background:var(--accent);font-size:.95rem}
 .av.sm{width:36px;height:36px;font-size:.8rem}
 .who{flex:1;min-width:0}.who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .who small{display:block;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mini{border:0;border-radius:12px;padding:9px 14px;font:inherit;font-weight:700;font-size:.82rem;cursor:pointer;background:rgba(255,255,255,.55);color:var(--ink);border:1px solid var(--line)}
-.mini.pri{background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border:0}
+.mini.pri{background:var(--accent);color:#fff;border:0}
 .empty{text-align:center;color:var(--dim);padding:26px 10px}
 /* conversation */
-#conv{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;height:100dvh;
-  background:radial-gradient(900px 500px at 12% -8%,#7d8bff55,transparent 60%),radial-gradient(700px 500px at 100% 0%,#ff8a6a4d,transparent 55%),#eef0fb}
-.chead{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--glass-hi);backdrop-filter:blur(16px)}
+#conv{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;height:100dvh;background:var(--bg)}
+.chead{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
 .chead .who{font-weight:800}
 .back{border:0;background:none;font-size:22px;cursor:pointer;color:var(--ink);padding:4px 8px}
 #msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:6px}
 .m{max-width:78%;padding:9px 13px 6px;border-radius:18px;line-height:1.4}
 .m p{white-space:pre-wrap;word-wrap:break-word;overflow-wrap:anywhere}
 .m time{display:block;font-size:.66rem;opacity:.65;text-align:right;margin-top:2px}
-.m.me{align-self:flex-end;background:linear-gradient(135deg,var(--g1),var(--g2));color:#fff;border-bottom-right-radius:6px}
-.m.them{align-self:flex-start;background:rgba(255,255,255,.75);border:1px solid var(--line);border-bottom-left-radius:6px}
-#compose{display:flex;gap:10px;padding:10px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--glass-hi);backdrop-filter:blur(16px)}
+.m.me{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:6px}
+.m.them{align-self:flex-start;background:var(--bg-2);border:1px solid var(--line);border-bottom-left-radius:6px}
+#compose{display:flex;gap:10px;padding:10px 14px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--line);background:var(--bg)}
 #compose input{flex:1;min-width:0;border-radius:99px;padding:13px 18px}
 #compose .btn{border-radius:99px;padding:0 22px;flex:none}
 #rbox{margin:10px 14px 0;padding:14px;border-radius:18px}
@@ -42,8 +41,9 @@ h2.sec{font-size:1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px
 #rbox .acts{margin-top:10px}
 </style>
 <link rel="stylesheet" href="/app.css">
-</head><body>
-<div id="gateScreen"><div class="glass card">
+<script>try{if(localStorage.getItem("lumora_authed"))document.documentElement.classList.add("authed")}catch(e){}</script>
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body>
+<div id="gateScreen" hidden><div class="glass card">
   <div class="e">💬</div>
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to chat</p>
   <p class="sub" style="margin-bottom:20px">Add friends and message them privately on Lumora.</p>

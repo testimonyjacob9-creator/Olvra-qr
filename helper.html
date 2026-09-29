@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Chat helper – Lumora</title>
+<meta name="description" content="Pick a voice and get a reply you can send.">
+<link rel="canonical" href="https://lumoral.netlify.app/helper"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/app.css">
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px}
+.plist{display:grid;gap:10px;margin-top:16px}
+.pcard{display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:14px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);cursor:pointer;font:inherit;color:var(--ink)}
+.pcard:active{transform:scale(.99)}
+.pcard.sel{border-color:var(--accent);outline:2px solid var(--accent)}
+.pav{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden}
+.pav svg{width:100%;height:100%;display:block}
+.pinfo b{display:block;font-size:.95rem}.pinfo small{display:block;color:var(--dim);margin-top:2px;font-size:.82rem}
+#step2{margin-top:22px}
+#step2 textarea{width:100%;min-height:110px;resize:vertical}
+#back{background:none;border:0;color:var(--dim);font-weight:700;padding:0;margin-bottom:10px;cursor:pointer}
+.pchip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:20px;background:var(--bg-2);border:1px solid var(--line);font-weight:700;font-size:.85rem;margin-bottom:14px}
+.pchip .pav{width:24px;height:24px}
+#replies{display:grid;gap:10px;margin-top:16px}
+.reply{padding:14px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
+.notice{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--dim);font-size:.85rem;margin-top:14px}
+</style>
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body>
+<div id="gateScreen" hidden><div class="glass card">
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to use Chat helper</p>
+  <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
+  <a class="btn pri" id="gateLink" href="/login?next=/helper">Sign in or create account</a>
+</div></div>
+<div id="gatedApp" hidden><div class="wrap">
+  <h1>Chat helper</h1>
+  <p class="sub">Pick a voice, then paste the message you're replying to.</p>
+
+  <div id="step1">
+    <div class="plist">
+  <button class="pcard" data-slug="nonchalant" data-name="Nonchalant">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#6b6f7a"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">N</text></svg></span>
+    <span class="pinfo"><b>Nonchalant</b><small>Cool, short replies that don't try too hard.</small></span>
+  </button>
+  <button class="pcard" data-slug="observer" data-name="The Observer">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#2b3cff"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">O</text></svg></span>
+    <span class="pinfo"><b>The Observer</b><small>Spots what doesn't add up and tells you what to ask.</small></span>
+  </button>
+  <button class="pcard" data-slug="confident" data-name="Confident">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#0f766e"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">C</text></svg></span>
+    <span class="pinfo"><b>Confident</b><small>Calm and self-assured, never desperate.</small></span>
+  </button>
+  <button class="pcard" data-slug="charming" data-name="Charming">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#d61f69"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">C</text></svg></span>
+    <span class="pinfo"><b>Charming</b><small>Warm, smooth and a little flirty.</small></span>
+  </button>
+  <button class="pcard" data-slug="funny" data-name="Funny">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#f59e0b"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">F</text></svg></span>
+    <span class="pinfo"><b>Funny</b><small>Playful replies and jokes that keep the chat light.</small></span>
+  </button>
+  <button class="pcard" data-slug="straight" data-name="Straight Talker">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#334155"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">ST</text></svg></span>
+    <span class="pinfo"><b>Straight Talker</b><small>Clear and honest, no games.</small></span>
+  </button>
+  <button class="pcard" data-slug="romantic" data-name="Romantic">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#e11d48"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">R</text></svg></span>
+    <span class="pinfo"><b>Romantic</b><small>Sweet and heartfelt.</small></span>
+  </button>
+  <button class="pcard" data-slug="peacemaker" data-name="Peacemaker">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#059669"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">P</text></svg></span>
+    <span class="pinfo"><b>Peacemaker</b><small>Calms arguments and helps you say sorry the right way.</small></span>
+  </button>
+  <button class="pcard" data-slug="boundary" data-name="Boundary Setter">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#7c3aed"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">BS</text></svg></span>
+    <span class="pinfo"><b>Boundary Setter</b><small>Politely says no and stands firm without a fight.</small></span>
+  </button>
+  <button class="pcard" data-slug="confrontation" data-name="The Confrontation Coach">
+    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#b91c1c"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">CC</text></svg></span>
+    <span class="pinfo"><b>The Confrontation Coach</b><small>A roleplay partner who deflects, so you can practise a hard talk.</small></span>
+  </button>
+    </div>
+  </div>
+
+  <div id="step2" hidden>
+    <button id="back">&larr; Change voice</button>
+    <div class="pchip" id="pchip"></div>
+    <label class="sub" for="msgIn" style="display:block;margin-bottom:6px">Their message (or what happened)</label>
+    <textarea id="msgIn" placeholder="Paste or type the message here..."></textarea>
+    <button class="btn pri" id="genBtn" style="margin-top:12px;width:100%">Get a reply</button>
+    <div id="replies"></div>
+    <div class="notice" id="stubNotice" hidden>Chat helper isn't connected to an AI yet — this is a placeholder reply. Real replies turn on once the API key is added.</div>
+  </div>
+</div></div>
+
+<script type="module">
+import {requireAuth} from '/gate.js';
+import {mountNav} from '/nav.js';
+mountNav();requireAuth();
+
+const PERSONAS = [
+  {slug:"nonchalant",name:"Nonchalant"},
+  {slug:"observer",name:"The Observer"},
+  {slug:"confident",name:"Confident"},
+  {slug:"charming",name:"Charming"},
+  {slug:"funny",name:"Funny"},
+  {slug:"straight",name:"Straight Talker"},
+  {slug:"romantic",name:"Romantic"},
+  {slug:"peacemaker",name:"Peacemaker"},
+  {slug:"boundary",name:"Boundary Setter"},
+  {slug:"confrontation",name:"The Confrontation Coach"},
+];
+const step1 = document.getElementById('step1'), step2 = document.getElementById('step2');
+let current = null;
+
+document.querySelectorAll('.pcard').forEach(el => {
+  el.onclick = () => {
+    current = PERSONAS.find(p => p.slug === el.dataset.slug);
+    document.getElementById('pchip').innerHTML = el.querySelector('.pav').outerHTML + '<span>' + current.name + '</span>';
+    document.getElementById('replies').innerHTML = '';
+    document.getElementById('stubNotice').hidden = true;
+    step1.hidden = true; step2.hidden = false;
+  };
+});
+document.getElementById('back').onclick = () => { step2.hidden = true; step1.hidden = false; };
+
+// Stub call — swap this for a real request to your own Netlify function
+// (which then calls the Anthropic API with the persona's system prompt)
+// once an API key is wired in. Keeping the network call server-side
+// keeps the key off the client.
+async function getReplies(persona, message) {
+  // TODO: replace with:
+  // const res = await fetch('/.netlify/functions/chat-helper-reply', {
+  //   method: 'POST',
+  //   headers: {'Content-Type':'application/json'},
+  //   body: JSON.stringify({ persona: persona.slug, message })
+  // });
+  // const data = await res.json();
+  // return data.replies;
+  await new Promise(r => setTimeout(r, 500));
+  return [
+    `[${persona.name} placeholder reply] Once connected, a real ${persona.name.toLowerCase()}-style reply will appear here.`,
+    `[${persona.name} placeholder reply] This is a second option, so you can pick the one that fits.`
+  ];
+}
+
+document.getElementById('genBtn').onclick = async () => {
+  const msg = document.getElementById('msgIn').value.trim();
+  if (!msg || !current) return;
+  const btn = document.getElementById('genBtn');
+  btn.disabled = true; btn.textContent = 'Thinking...';
+  const replies = await getReplies(current, msg);
+  document.getElementById('replies').innerHTML = replies.map(r =>
+    `<div class="reply">${r.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`
+  ).join('');
+  document.getElementById('stubNotice').hidden = false;
+  btn.disabled = false; btn.textContent = 'Get a reply';
+};
+</script>
+</body></html>

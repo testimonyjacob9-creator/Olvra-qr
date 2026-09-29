@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Notifications – Lumora</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#d61f69">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{font:500 15px/1.5 'Plus Jakarta Sans',system-ui,sans-serif;min-height:100vh}
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
+.wrap{max-width:520px;margin:0 auto;padding:14px 20px 40px}
+.head{display:flex;align-items:center;justify-content:space-between;margin:8px 0 18px}
+h1{font-size:1.6rem}
+.mark{background:none;border:0;font:700 .85rem inherit;color:var(--accent);cursor:pointer;padding:8px 0}
+.mark[disabled]{opacity:.4;cursor:default}
+#list{display:grid;gap:10px}
+.item{display:block;width:100%;text-align:left;padding:14px 16px;border-radius:18px;color:var(--ink);cursor:pointer;font:inherit;position:relative}
+.item.unread{padding-left:30px}
+.item.unread::before{content:"";position:absolute;left:14px;top:20px;width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.item b{display:block}
+.item span{display:block;color:var(--dim);font-size:.9rem;margin-top:2px}
+.item time{display:block;color:var(--dim);font-size:.78rem;margin-top:6px}
+.empty{text-align:center;padding:60px 10px;color:var(--dim)}
+</style>
+<link rel="stylesheet" href="/app.css">
+<script>try{if(localStorage.getItem("lumora_authed"))document.documentElement.classList.add("authed")}catch(e){}</script>
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body>
+<div id="gateScreen" hidden><div class="glass card">
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to see notifications</p>
+  <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
+  <a class="btn pri" id="gateLink" href="/login?next=/notifications">Sign in or create account</a>
+</div></div>
+<div id="gatedApp" hidden><div class="wrap">
+  <div class="head"><h1>Notifications</h1><button class="mark" id="markAll" disabled>Mark all read</button></div>
+  <div id="list"></div>
+</div></div>
+<script type="module">
+import {auth,db} from '/firebase-init.js';
+import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {collection,query,orderBy,limit,onSnapshot,updateDoc,doc,writeBatch} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {requireAuth} from '/gate.js';
+import {mountNav} from '/nav.js';
+mountNav();requireAuth();
+
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=d=>d.toLocaleString(undefined,{day:'numeric',month:'short',hour:'numeric',minute:'2-digit'});
+let stop=null;
+onAuthStateChanged(auth,u=>{
+  if(stop){stop();stop=null}
+  if(!u)return;
+  const col=collection(db,'users',u.uid,'notifications');
+  stop=onSnapshot(query(col,orderBy('createdAt','desc'),limit(50)),snap=>{
+    const list=document.getElementById('list'),btn=document.getElementById('markAll');
+    const unread=snap.docs.filter(d=>!d.data().read);
+    btn.disabled=!unread.length;
+    if(snap.empty){list.innerHTML='<div class="empty">Nothing here yet.<br>Updates from Lumora will show up here.</div>';return}
+    list.innerHTML=snap.docs.map(d=>{
+      const n=d.data(),t=n.createdAt&&n.createdAt.toDate?fmt(n.createdAt.toDate()):'';
+      return `<button class="glass item ${n.read?'':'unread'}" data-id="${d.id}"><b>${esc(n.title)}</b><span>${esc(n.body)}</span><time>${t}</time></button>`;
+    }).join('');
+    list.querySelectorAll('.item.unread').forEach(el=>el.onclick=()=>updateDoc(doc(db,'users',u.uid,'notifications',el.dataset.id),{read:true}).catch(()=>{}));
+    btn.onclick=async()=>{const b=writeBatch(db);unread.forEach(d=>b.update(d.ref,{read:true}));btn.disabled=true;try{await b.commit()}catch(e){btn.disabled=false}};
+  },()=>{document.getElementById('list').innerHTML='<div class="empty">Could not load notifications. Try again.</div>'});
+});
+</script>
+</body></html>

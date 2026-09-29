@@ -18,6 +18,8 @@ exports.handler = async (event) => {
     if (!snap.exists) patch.createdAt = FieldValue.serverTimestamp();
     if (!data.email && decoded.email) patch.email = decoded.email;
     if (!data.displayName && decoded.name) patch.displayName = decoded.name;
+    const phone = String(body.phone || "").trim();
+    if (phone && (!data.phone || body.changePhone)) patch.phone = phone;
     const c = String(body.country || "").toUpperCase();
     if (/^[A-Z]{2}$/.test(c) && (!data.country || body.change)) patch.country = c;
 

@@ -33,7 +33,7 @@ textarea{min-height:100px}
 @media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 <link rel="stylesheet" href="/app.css">
-</head><body><div class="wrap">
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body><div class="wrap">
 <div class="top"><a class="logo" href="/">lum<span>ora</span></a><a class="mini" href="/">Back to site</a></div>
 <h1>Admin</h1>
 <div id="gate"><p>Checking access...</p></div>
@@ -52,7 +52,7 @@ textarea{min-height:100px}
   </div>
 
   <section id="tab-users">
-    <input class="srch" id="q" type="search" placeholder="Search by email or name" aria-label="Search users">
+    <input class="srch" id="q" type="search" placeholder="Search by email, name or phone" aria-label="Search users">
     <div class="card" id="userList"><p class="sub">Loading...</p></div>
   </section>
 
@@ -111,10 +111,10 @@ async function loadUsers(){
 }
 function renderUsers(){
   const q=$('#q').value.trim().toLowerCase();
-  const list=users.filter(u=>!q||(u.email||'').toLowerCase().includes(q)||(u.displayName||'').toLowerCase().includes(q));
+  const list=users.filter(u=>!q||(u.email||'').toLowerCase().includes(q)||(u.displayName||'').toLowerCase().includes(q)||(u.phone||'').includes(q));
   $('#userList').innerHTML=list.map(u=>{
     const st=u.suspended?'<span class="pill bad">Suspended</span>':active(u)?`<span class="pill pre">Premium until ${new Date(u.premiumUntil).toLocaleDateString()}</span>`:'<span class="pill free">Free</span>';
-    return `<div class="urow"><div class="who"><b>${esc(u.email||u.uid)}</b><small>${esc(u.displayName||'')}${u.displayName?' · ':''}${u.loveCount||0} love messages</small><div style="margin-top:4px">${st}</div></div>
+    return `<div class="urow"><div class="who"><b>${esc(u.displayName||'(no name)')}</b><small>${esc(u.email||u.uid)}${u.phone?' · '+esc(u.phone):' · no phone'} · ${u.loveCount||0} love messages</small><div style="margin-top:4px">${st}</div></div>
     <div class="act">
       <button class="mini pri" data-u="${esc(u.uid)}" data-a="grant" data-d="30">+30 days</button>
       <button class="mini" data-u="${esc(u.uid)}" data-a="grant" data-d="365">+1 year</button>
