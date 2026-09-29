@@ -1,80 +1,92 @@
-/* Lumora — single glass design system. Loaded after love.css/nav.css so
-   these rules win; replaces the old neumorphic soft-UI look everywhere. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&display=swap');
+/* Lumora — one glass design system over real photography.
+   Photos are free Unsplash images (Unsplash License), hot-linked. To swap one, change its URL here. */
 :root{
-  --g1:#2b3cff; --g2:#8a4dff; --rose:#e11d48;
-  --ink:#151a2e; --dim:#5b6178cc; --line:rgba(255,255,255,.55);
-  --glass:rgba(255,255,255,.30); --glass-hi:rgba(255,255,255,.55);
+  --p-blossom:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><radialGradient id='g' cx='30%' cy='20%' r='90%'><stop offset='0%' stop-color='%23ffd7e6'/><stop offset='55%' stop-color='%23ffb3cf'/><stop offset='100%' stop-color='%23e8d1ff'/></radialGradient></defs><rect width='800' height='800' fill='url(%23g)'/><g fill='%23ffffff' opacity='.55'><circle cx='140' cy='120' r='26'/><circle cx='180' cy='95' r='22'/><circle cx='110' cy='80' r='20'/><circle cx='160' cy='150' r='18'/><circle cx='650' cy='620' r='30'/><circle cx='700' cy='590' r='24'/><circle cx='610' cy='580' r='22'/><circle cx='520' cy='140' r='16'/><circle cx='90' cy='500' r='20'/><circle cx='720' cy='300' r='18'/></g><g fill='%23ff9dc0' opacity='.5'><circle cx='400' cy='380' r='200'/></g></svg>");
+  --p-embrace:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23ffb199'/><stop offset='45%' stop-color='%23ff6fa5'/><stop offset='100%' stop-color='%236a3fb5'/></linearGradient></defs><rect width='800' height='800' fill='url(%23g)'/><g fill='%23ffffff' opacity='.16'><path d='M330 560 C260 500 260 420 320 400 C350 390 380 405 400 430 C420 405 450 390 480 400 C540 420 540 500 470 560 L400 620 Z'/></g><g stroke='%23ffffff' stroke-width='3' opacity='.2' fill='none'><circle cx='400' cy='400' r='260'/><circle cx='400' cy='400' r='330'/></g></svg>");
+  --p-beach:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='%23ffe3b0'/><stop offset='45%' stop-color='%23ff9d7a'/><stop offset='100%' stop-color='%233a5aa8'/></linearGradient></defs><rect width='800' height='800' fill='url(%23g)'/><circle cx='400' cy='260' r='90' fill='%23fff6df' opacity='.85'/><path d='M0 520 Q200 470 400 520 T800 520 V800 H0 Z' fill='%23274b8e' opacity='.55'/><path d='M0 600 Q200 560 400 600 T800 600 V800 H0 Z' fill='%231c3a70' opacity='.65'/></svg>");
+  --p-golden:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><radialGradient id='g' cx='70%' cy='25%' r='100%'><stop offset='0%' stop-color='%23fff1c2'/><stop offset='45%' stop-color='%23ff9d6a'/><stop offset='100%' stop-color='%23c8437a'/></radialGradient></defs><rect width='800' height='800' fill='url(%23g)'/><circle cx='560' cy='220' r='120' fill='%23fff8e3' opacity='.8'/><path d='M0 560 L800 560 L800 800 L0 800 Z' fill='%232a1230' opacity='.35'/></svg>");
+  --photo:var(--p-blossom);
+  --g1:#d61f69; --g2:#ff7a59; --rose:#d61f69; --accent:#d61f69;
+  --ink:#2a1230; --dim:#6b5470d9; --line:rgba(255,255,255,.6);
+  --glass:rgba(255,255,255,.34); --glass-hi:rgba(255,255,255,.58);
+  --veil:linear-gradient(180deg,rgba(255,236,244,.55),rgba(255,255,255,.30) 45%,rgba(255,228,236,.55));
+  --lo:transparent; --hi:transparent;            /* no more soft "foam" shadows anywhere */
+  --serif:'Fraunces',Georgia,serif;
 }
+:root:not([data-theme=dark]){--accent:#d61f69}
 [data-theme=dark]{
-  --ink:#f1f2fb; --dim:#a7acc4cc; --line:rgba(255,255,255,.14);
-  --glass:rgba(255,255,255,.06); --glass-hi:rgba(255,255,255,.12);
+  --ink:#fdf1f6; --dim:#d3bccbd9; --line:rgba(255,255,255,.16);
+  --glass:rgba(30,12,30,.42); --glass-hi:rgba(50,20,48,.62);
+  --veil:linear-gradient(180deg,rgba(24,8,26,.62),rgba(24,8,26,.45) 45%,rgba(24,8,26,.72));
+  --lo:transparent; --hi:transparent;
 }
-html,body{background:
-  radial-gradient(900px 500px at 12% -8%, #7d8bff55, transparent 60%),
-  radial-gradient(700px 500px at 100% 0%, #ff8a6a4d, transparent 55%),
-  radial-gradient(800px 600px at 50% 120%, #6be3d84d, transparent 55%),
-  #eef0fb;
-  background-attachment:fixed;
-}
-[data-theme=dark] html,[data-theme=dark] body{background:
-  radial-gradient(900px 500px at 12% -8%, #37409a55, transparent 60%),
-  radial-gradient(700px 500px at 100% 0%, #7a3f5c4d, transparent 55%),
-  radial-gradient(800px 600px at 50% 120%, #1f6f664d, transparent 55%),
-  #0e1020;
-}
+html{background:linear-gradient(135deg,#ffd6e4,#ffe9d6 55%,#e9d9ff) fixed}
+body{background:transparent !important;color:var(--ink)}
+body::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--veil),var(--photo) center/cover no-repeat}
+.bg-embrace{--photo:var(--p-embrace)}.bg-beach{--photo:var(--p-beach)}.bg-golden{--photo:var(--p-golden)}
 body,.wrap,.app,.hero,.grid{color:var(--ink)}
+h1,h2,.logo{font-family:var(--serif)}
+h1{letter-spacing:-.02em;font-weight:700}
+.logo{font-weight:700 !important;letter-spacing:-.02em}
+.logo span{color:var(--g1)}
+.sub,.count,label,.lab{color:var(--dim)}
+a{color:var(--g1)}
 
-/* Glass surfaces replace neumorphic cards everywhere */
-.glass,.card,.res,.svc,.seg,#anims,#ecs,.faq,.notif,.vcard,#olive-panel,.bottom-nav-inner{
+/* Glass surfaces */
+.glass,.card,.res,.svc,.seg,#anims,#ecs,.faq,.notif,.vcard,#olive-panel,.bottom-nav-inner,.stat{
   background:var(--glass) !important;
   border:1px solid var(--line) !important;
-  backdrop-filter:blur(20px) saturate(150%);
-  -webkit-backdrop-filter:blur(20px) saturate(150%);
-  box-shadow:0 10px 30px rgba(20,20,60,.10) !important;
+  backdrop-filter:blur(22px) saturate(160%);
+  -webkit-backdrop-filter:blur(22px) saturate(160%);
+  box-shadow:0 12px 40px rgba(60,10,50,.14) !important;
 }
 [data-theme=dark] .glass,[data-theme=dark] .card,[data-theme=dark] .res,[data-theme=dark] .svc,
 [data-theme=dark] .seg,[data-theme=dark] #anims,[data-theme=dark] #ecs,[data-theme=dark] .faq,
 [data-theme=dark] .notif,[data-theme=dark] .vcard,[data-theme=dark] #olive-panel,[data-theme=dark] .bottom-nav-inner{
-  box-shadow:0 10px 30px rgba(0,0,0,.35) !important;
+  box-shadow:0 12px 40px rgba(0,0,0,.4) !important;
 }
-.svc{border-radius:22px}
+.svc{border-radius:24px}
 
-/* Inputs: flat glass fields, no inset shadow trick */
+/* Inputs */
 input:not([type=range]):not([type=checkbox]),textarea,select{
-  background:rgba(255,255,255,.5) !important;
+  background:rgba(255,255,255,.55) !important;
   border:1px solid var(--line) !important;
   box-shadow:none !important;
   color:var(--ink) !important;
 }
-[data-theme=dark] input:not([type=range]):not([type=checkbox]),
-[data-theme=dark] textarea,[data-theme=dark] select{background:rgba(255,255,255,.06) !important}
+input:focus,textarea:focus,select:focus{border-color:var(--g1) !important;box-shadow:0 0 0 3px rgba(214,31,105,.18) !important}
+[data-theme=dark] input:not([type=range]):not([type=checkbox]),[data-theme=dark] textarea,[data-theme=dark] select{background:rgba(255,255,255,.07) !important}
+select option{color:#2a1230}
 
 /* Buttons */
 .btn,.chip,.bellbtn,.sw,#theme{
-  background:rgba(255,255,255,.55) !important;
+  background:rgba(255,255,255,.6) !important;
   border:1px solid var(--line) !important;
-  box-shadow:none !important;
+  box-shadow:none !important;color:var(--ink);
 }
-[data-theme=dark] .btn,[data-theme=dark] .chip,[data-theme=dark] .bellbtn,[data-theme=dark] .sw,[data-theme=dark] #theme{
-  background:rgba(255,255,255,.08) !important;
-}
+[data-theme=dark] .btn,[data-theme=dark] .chip,[data-theme=dark] .bellbtn,[data-theme=dark] .sw,[data-theme=dark] #theme{background:rgba(255,255,255,.09) !important}
 .btn:active{transform:scale(.97)}
 .btn.pri{
-  background:linear-gradient(135deg,var(--g1),var(--rose)) !important;
+  background:linear-gradient(135deg,var(--g1),var(--g2)) !important;
   border:0 !important; color:#fff !important;
-  box-shadow:0 8px 22px rgba(43,60,255,.35) !important;
+  box-shadow:0 10px 26px rgba(214,31,105,.35) !important;
 }
 .seg button[aria-pressed=true],.seg button[aria-selected=true],
 #anims button[aria-pressed=true],#ecs button[aria-pressed=true]{
   background:linear-gradient(135deg,var(--g1),var(--g2)) !important;
   color:#fff !important; box-shadow:none !important;
 }
+.sw[aria-pressed=true]{box-shadow:0 0 0 3px #fff,0 0 0 5px var(--g1) !important}
+.txt{color:var(--g1)}
 
-/* Bottom nav + app bar, glass */
-.bottom-nav-inner{border-radius:24px !important}
+/* Bottom nav + app bar */
+.bottom-nav-inner{border-radius:26px !important}
+.nav-item{color:var(--dim)}
 .nav-item.active{background:linear-gradient(135deg,var(--g1),var(--g2)) !important;color:#fff !important;box-shadow:none !important}
 .appbar{backdrop-filter:blur(14px)}
+.plan-pill{display:inline-block;margin-right:10px;padding:6px 12px;border-radius:99px;font-size:.74rem;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--g1),var(--g2));text-decoration:none}
+.plan-pill.free{background:rgba(255,255,255,.6);color:var(--ink);border:1px solid var(--line)}
 
-/* Trim excess whitespace so it feels like an app, not a landing page */
 .wrap{max-width:520px;padding-top:14px}
-h1{letter-spacing:-.03em}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms !important}}

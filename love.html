@@ -1,42 +1,66 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send a Love Message with Animations – Lumora</title>
-<meta name="description" content="Write a love message, pick hearts, confetti or a typing animation, and share a private link on WhatsApp.">
-<link rel="canonical" href="https://lumoral.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Send a Love Message – Lumora</title>
+<meta name="description" content="Pick a photo, write from the heart, choose an animation and share one private link on WhatsApp.">
+<link rel="canonical" href="https://lumoral.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#d61f69">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <style>
 #gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
 #gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
 #gateScreen .e{font-size:44px;margin-bottom:6px}
+.wrap{max-width:560px}
+body{--veil:linear-gradient(180deg,rgba(255,236,244,.35),rgba(255,255,255,.18) 40%,rgba(255,236,244,.55))}
+/* live preview of the card the other person will open */
+.pv{position:relative;overflow:hidden;border-radius:26px;aspect-ratio:4/5;max-height:400px;width:100%;margin:6px 0 4px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;padding:22px;
+  background:linear-gradient(180deg,rgba(20,0,25,.05) 25%,rgba(25,0,30,.72)),var(--ph) center/cover;box-shadow:0 18px 50px rgba(60,10,50,.28);transition:background .4s}
+.pv small{opacity:.85;font-size:.8rem;letter-spacing:.02em}
+.pv .to{font-family:var(--serif);font-size:1.5rem;font-weight:700;margin:2px 0 8px}
+.pv .txt2{font-family:var(--serif);font-style:italic;font-weight:500;font-size:1.02rem;line-height:1.5;max-height:9.5em;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere}
+.pv .sg{margin-top:10px;font-weight:700;font-size:.92rem;text-align:right}
+.pv .empty{opacity:.7}
+.picks{display:flex;gap:12px}
+.ph-th{flex:1;min-width:0;height:78px;border-radius:18px;border:2px solid transparent !important;cursor:pointer;color:#fff;font:700 .72rem 'Plus Jakarta Sans',sans-serif;display:flex;align-items:flex-end;justify-content:center;padding:0 0 7px;
+  background:linear-gradient(180deg,transparent 40%,rgba(20,0,25,.7)),var(--ph) center/cover !important;text-shadow:0 1px 6px rgba(0,0,0,.6)}
+.ph-th[aria-pressed=true]{border-color:#fff !important;box-shadow:0 0 0 3px var(--g1) !important}
+.p0{--ph:var(--p-golden)}.p1{--ph:var(--p-embrace)}.p2{--ph:var(--p-beach)}
+.pulse{display:inline-block;animation:pulse 1.15s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 </style><link rel="stylesheet" href="/app.css">
-</head><body>
+</head><body class="bg-golden">
 <div id="gateScreen"><div class="glass card">
   <div class="e">🔒</div>
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
   <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
-  <a class="btn pri" id="gateLink" href="/account">Sign in or create account</a>
+  <a class="btn pri" id="gateLink" href="/login">Sign in or create account</a>
 </div></div>
 <div id="gatedApp" hidden><div class="wrap">
 <a class="logo" href="/">lum<span>ora</span></a>
 <h1><span class="pulse" aria-hidden="true">❤️</span> Send a love message</h1>
-<p class="sub">Write it, pick an animation, then share the private link on WhatsApp.</p>
+<p class="sub">Pick a photo, write from the heart, then share one private link.</p>
+
 <div id="compose">
-  <label for="to">Who is it for?</label><input id="to" maxlength="40" placeholder="Amaka" autocomplete="off">
-  <label for="from">Your name</label><input id="from" maxlength="40" placeholder="Tobi" autocomplete="off">
-  <label for="msg">Your message <span class="count" id="cnt">0/600</span></label><textarea id="msg" maxlength="600" placeholder="Write from the heart..."></textarea>
-  <div class="lab">Animation</div>
-  <div class="seg" id="anims"><button data-a="couple" aria-pressed="true">Couple</button><button data-a="hearts" aria-pressed="false">Hearts</button><button data-a="confetti" aria-pressed="false">Confetti</button><button data-a="typing" aria-pressed="false">Typing</button></div>
-  <div class="lab">Colours</div>
-  <div class="swatches" id="sws">
-    <button class="sw" data-i="0" aria-label="Indigo" aria-pressed="true" style="background:linear-gradient(135deg,#2b3cff,#8a4dff)"></button>
-    <button class="sw" data-i="1" aria-label="Ember" aria-pressed="false" style="background:linear-gradient(135deg,#ff8a3d,#ff3d6e)"></button>
-    <button class="sw" data-i="2" aria-label="Lagoon" aria-pressed="false" style="background:linear-gradient(135deg,#0fb5a6,#2b6cff)"></button>
+  <div class="pv p0" id="pv"><small id="pvTo2">A message for</small><div class="to" id="pvTo">Someone special</div><div class="txt2 empty" id="pvMsg">Your message will appear here as you type.</div><div class="sg" id="pvFrom"></div></div>
+
+  <div class="lab">Photo</div>
+  <div class="picks" id="sws">
+    <button class="ph-th p0" data-i="0" aria-pressed="true" type="button">Golden hour</button>
+    <button class="ph-th p1" data-i="1" aria-pressed="false" type="button">Embrace</button>
+    <button class="ph-th p2" data-i="2" aria-pressed="false" type="button">Seaside</button>
   </div>
-  <p id="err" role="alert"></p>
-  <div class="acts"><button class="btn pri" id="go">Create my link</button></div>
+
+  <div class="glass" style="padding:6px 18px 20px;border-radius:24px;margin-top:20px">
+    <label for="to">Who is it for?</label><input id="to" maxlength="40" placeholder="Amaka" autocomplete="off">
+    <label for="from">Your name</label><input id="from" maxlength="40" placeholder="Tobi" autocomplete="off">
+    <label for="msg">Your message <span class="count" id="cnt">0/600</span></label><textarea id="msg" maxlength="600" placeholder="Write from the heart..."></textarea>
+    <div class="lab">Animation when they open it</div>
+    <div class="seg" id="anims"><button data-a="couple" aria-pressed="true">Together</button><button data-a="hearts" aria-pressed="false">Hearts</button><button data-a="confetti" aria-pressed="false">Confetti</button><button data-a="typing" aria-pressed="false">Typing</button></div>
+    <p id="err" role="alert"></p>
+    <div class="acts"><button class="btn pri" id="go">Create my link</button></div>
+  </div>
 </div>
+
 <div class="res" id="res" hidden>
   <h2>Your link is ready</h2>
   <input id="url" readonly aria-label="Your link">
@@ -51,10 +75,20 @@ import {mountNav} from "/nav.js";
 mountNav();
 requireAuth();
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const BG=['golden','embrace','beach'];
 let anim='couple',theme=0;
 $$('#anims button').forEach(b=>b.onclick=()=>{anim=b.dataset.a;$$('#anims button').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-$$('.sw').forEach(b=>b.onclick=()=>{theme=+b.dataset.i;$$('.sw').forEach(x=>x.setAttribute('aria-pressed',x===b))});
-$('#msg').oninput=e=>$('#cnt').textContent=e.target.value.length+'/600';
+$$('#sws .ph-th').forEach(b=>b.onclick=()=>{
+  theme=+b.dataset.i;$$('#sws .ph-th').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  $('#pv').className='pv p'+theme;document.body.className='bg-'+BG[theme];
+});
+function preview(){
+  const to=$('#to').value.trim(),from=$('#from').value.trim(),msg=$('#msg').value.trim();
+  $('#pvTo').textContent=to||'Someone special';
+  const m=$('#pvMsg');m.textContent=msg?(msg.length>220?msg.slice(0,220)+'…':msg):'Your message will appear here as you type.';m.classList.toggle('empty',!msg);
+  $('#pvFrom').textContent=from?'— '+from:'';
+}
+['#to','#from','#msg'].forEach(s=>$(s).addEventListener('input',()=>{$('#cnt').textContent=$('#msg').value.length+'/600';preview()}));
 $('#go').onclick=async()=>{
   const to=$('#to').value.trim(),from=$('#from').value.trim(),msg=$('#msg').value.trim(),err=$('#err');err.textContent='';
   if(!to||!from||!msg){err.textContent='Fill in who it is for, your name and the message.';return}
@@ -63,7 +97,7 @@ $('#go').onclick=async()=>{
     const r=await fetch('/.netlify/functions/create-love',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await auth.currentUser.getIdToken()},body:JSON.stringify({to,from,msg,anim,theme})});
     const d=await r.json();
     if(!r.ok){
-      err.innerHTML=d.limitReached?(d.error+' <a href="/account" style="color:inherit;font-weight:700">Upgrade →</a>'):(d.error||'Could not create the link.');
+      err.innerHTML=d.limitReached?(d.error+' <a href="/account" style="color:inherit;font-weight:700">Upgrade</a>'):(d.error||'Could not create the link.');
       $('#go').disabled=false;return;
     }
     const url=location.origin+'/l/'+d.id;

@@ -1,13 +1,43 @@
 {
+  "trialDays": 7,
   "days": 30,
   "note": "Single source of truth for premium prices. Read by premium.html and by verify-premium.js. Amounts are approximate equivalents of NGN 500 - review before launch.",
   "countries": {
-    "NG": { "name": "Nigeria", "currency": "NGN", "amount": 500 },
-    "GH": { "name": "Ghana", "currency": "GHS", "amount": 5 },
-    "KE": { "name": "Kenya", "currency": "KES", "amount": 50 },
-    "ZA": { "name": "South Africa", "currency": "ZAR", "amount": 8 },
-    "UG": { "name": "Uganda", "currency": "UGX", "amount": 1500 },
-    "TZ": { "name": "Tanzania", "currency": "TZS", "amount": 1000 },
-    "OTHER": { "name": "Other country", "currency": "USD", "amount": 1 }
-  }
+    "NG": {
+      "name": "Nigeria",
+      "currency": "NGN",
+      "amount": 500
+    },
+    "GH": {
+      "name": "Ghana",
+      "currency": "GHS",
+      "amount": 5
+    },
+    "KE": {
+      "name": "Kenya",
+      "currency": "KES",
+      "amount": 50
+    },
+    "ZA": {
+      "name": "South Africa",
+      "currency": "ZAR",
+      "amount": 8
+    },
+    "UG": {
+      "name": "Uganda",
+      "currency": "UGX",
+      "amount": 1500
+    },
+    "TZ": {
+      "name": "Tanzania",
+      "currency": "TZS",
+      "amount": 1000
+    },
+    "OTHER": {
+      "name": "Other country",
+      "currency": "USD",
+      "amount": 1
+    }
+  },
+  "freeLoveLimit": 15
 }

@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lumora Premium</title>
-<meta name="description" content="Lumora Premium: 30 days at a time, priced in your local currency.">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Me – Lumora</title>
+<meta name="description" content="Your Lumora account, plan and notifications.">
 <link rel="canonical" href="https://lumoral.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
@@ -10,40 +10,48 @@
 <script src="https://checkout.flutterwave.com/v3.js"></script>
 <style>
 #avatarWrap{display:flex;align-items:center;gap:16px;margin:6px 0 22px}
-#avatarImg{width:72px;height:72px;border-radius:50%;object-fit:cover;background:var(--bg);box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi)}
+#avatarImg{width:72px;height:72px;border-radius:50%;object-fit:cover}
+#avatarPlaceholder{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;font-size:26px}
 #avatarFile{display:none}
-.notif{padding:12px 14px;border-radius:14px;margin-bottom:8px;box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi)}
-.notif.unread{border-left:4px solid var(--rose,#e11d48)}
+.plancard{padding:20px;border-radius:22px;margin:4px 0 18px}
+.plancard .kicker{font-size:.76rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--dim)}
+.plancard .big{font-family:var(--serif);font-size:1.5rem;margin:2px 0 4px}
+.plancard.on{background:linear-gradient(135deg,rgba(214,31,105,.16),rgba(255,122,89,.14)) !important}
+.compare{width:100%;border-collapse:collapse;margin:14px 0 4px;font-size:.88rem}
+.compare th,.compare td{padding:8px 6px;text-align:center;border-bottom:1px solid var(--line)}
+.compare td:first-child,.compare th:first-child{text-align:left}
+.compare th{font-weight:800}
+.notif{padding:12px 14px;border-radius:14px;margin-bottom:8px}
+.notif.unread{border-left:4px solid var(--rose)}
 .notif b{display:block;font-size:.88rem}.notif span{color:var(--dim);font-size:.82rem}
 </style>
 <link rel="stylesheet" href="/app.css">
 </head><body><div class="wrap">
 <h1>Me</h1>
 <div id="avatarWrap">
-  <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" style="width:72px;height:72px;border-radius:50%;background:var(--bg);box-shadow:5px 5px 10px var(--lo),-5px -5px 10px var(--hi);display:grid;place-items:center;font-size:26px">🙂</div>
+  <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" class="glass">🙂</div>
   <div><button class="btn" id="avatarBtn" type="button">Change photo</button><input id="avatarFile" type="file" accept="image/*"><p class="sub" id="avatarMsg" style="margin-top:6px"></p></div>
 </div>
-<p class="sub">30 days at a time, priced in your local currency.</p>
-<ul class="perks">
-  <li>✅ No watermark on your business cards</li>
-  <li>🔜 <small>Coming soon: extra card templates and your logo in QR codes</small></li>
-  <li>🔜 <small>Coming soon: love links that never expire</small></li>
-  <li>🔜 <small>Coming soon: more animations and longer messages</small></li>
-</ul>
-<div id="out">
-  <label for="em">Email</label><input id="em" type="text" inputmode="email" autocomplete="email">
-  <label for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" style="width:100%;border:0;outline:0;background:var(--bg);color:var(--ink);font:inherit;padding:14px 16px;border-radius:14px;box-shadow:inset 5px 5px 10px var(--lo),inset -5px -5px 10px var(--hi)">
-  <div class="acts"><button class="btn pri" id="signin">Sign in</button><button class="btn" id="signup">Create account</button></div>
-  <button class="txt" id="forgot">Forgot password?</button>
-  <div class="acts"><button class="btn" id="google">Continue with Google</button></div>
+
+<div class="glass plancard" id="planCard">
+  <div class="kicker" id="planKicker">Loading...</div>
+  <div class="big" id="planBig">–</div>
+  <p class="sub" id="planSub"></p>
 </div>
-<div id="in" hidden>
-  <p id="status"></p>
+
+<table class="compare">
+  <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
+  <tr><td>Love messages</td><td id="cmpFree">–</td><td>Unlimited</td></tr>
+  <tr><td>Business card watermark</td><td>Shown</td><td>Removed</td></tr>
+  <tr><td>Chat with friends</td><td>✅</td><td>✅</td></tr>
+</table>
+
+<div id="upgrade">
   <label for="country">Your country</label><select id="country"></select>
   <p id="price"></p><p class="sub">for 30 days. Paying again adds 30 more days.</p>
   <div class="acts"><button class="btn pri" id="pay">Pay for Premium</button></div>
-  <button class="txt" id="signout">Sign out</button>
 </div>
+<button class="txt" id="signout">Sign out</button>
 <p id="err" role="alert"></p>
 
 <div id="notifSection" hidden>
@@ -51,7 +59,7 @@
   <div class="row" style="margin-bottom:8px">
     <span class="sub" id="pushLabel" style="margin:0">Get notified on this device</span>
     <label style="display:inline-flex;align-items:center;cursor:pointer">
-      <input type="checkbox" id="pushToggle" style="width:44px;height:26px;accent-color:var(--accent,#2b3cff)">
+      <input type="checkbox" id="pushToggle" style="width:44px;height:26px;accent-color:var(--accent)">
     </label>
   </div>
   <h2 id="notifications" style="font-size:1.1rem;margin:22px 0 12px">Notifications</h2>
@@ -59,119 +67,45 @@
 </div>
 
 <p style="margin-top:30px"><a href="/terms" style="color:var(--accent)">Terms &amp; Conditions</a> · <a href="/help" style="color:var(--accent)">Help</a></p>
-
-<div id="reset" hidden>
-  <h1>Reset password</h1>
-  <div id="rstep1">
-    <label for="rem">Your account email</label><input id="rem" type="text" inputmode="email" autocomplete="email">
-    <div class="acts"><button class="btn pri" id="rsend">Send reset code</button><button class="btn" id="rback1">Back</button></div>
-  </div>
-  <div id="rstep2" hidden>
-    <p class="sub" id="rmsg"></p>
-    <label for="rcode">6-digit code</label><input id="rcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-    <label for="rnew">New password</label><input id="rnew" type="password" autocomplete="new-password">
-    <div class="acts"><button class="btn pri" id="rconfirm">Set new password</button><button class="btn" id="rresend">Resend code</button></div>
-  </div>
-</div>
-
-<div id="verify" hidden>
-  <h1>Verify your email</h1>
-  <p class="sub" id="vmsg"></p>
-  <label for="vcode">6-digit code</label><input id="vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
-  <div class="acts"><button class="btn pri" id="vconfirm">Verify</button><button class="btn" id="vresend">Resend code</button></div>
-  <button class="txt" id="vskip">Skip for now</button>
-</div>
 </div>
 <script type="module">
 import {auth,db} from '/firebase-init.js';
-import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,signOut,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {onAuthStateChanged,signOut} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {doc,getDoc,setDoc,collection,query,orderBy,limit,onSnapshot,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import {mountNav} from '/nav.js';
+import {LIST,flag,detectCountry} from '/countries.js';
 mountNav({showLogo:false});
 const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
-const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
-const P=await (await fetch('/pricing.json')).json();
+const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+const err=m=>$('#err').textContent=m||'';
+const [P,PR]=await Promise.all([fetch('/pricing.json').then(r=>r.json()),fetch('/pricing.json').then(r=>r.json())]);
 const fmt=p=>new Intl.NumberFormat('en',{style:'currency',currency:p.currency,minimumFractionDigits:0,maximumFractionDigits:2}).format(p.amount);
-$('#country').innerHTML=Object.entries(P.countries).map(([k,v])=>`<option value="${k}">${v.name}</option>`).join('');
-const guess=((navigator.language||'').split('-')[1]||'').toUpperCase();
-$('#country').value=P.countries[guess]?guess:'OTHER';
-const showPrice=()=>$('#price').textContent=fmt(P.countries[$('#country').value]);
-$('#country').onchange=showPrice;showPrice();
-const FRIENDLY={
-  'auth/invalid-email':'That email address looks invalid.',
-  'auth/missing-password':'Enter a password.',
-  'auth/weak-password':'Password must be at least 6 characters.',
-  'auth/email-already-in-use':'An account already exists with that email. Try signing in instead.',
-  'auth/invalid-credential':'Incorrect email or password.',
-  'auth/wrong-password':'Incorrect email or password.',
-  'auth/user-not-found':'No account found with that email.',
-  'auth/too-many-requests':'Too many attempts. Wait a bit and try again.',
-  'auth/network-request-failed':'Network error. Check your connection and try again.',
-  'auth/unauthorized-domain':'This site is not yet authorized for sign-in. Add it in Firebase → Authentication → Settings → Authorized domains.',
-  'auth/operation-not-allowed':'This sign-in method is not turned on yet in Firebase → Authentication → Sign-in method.',
-  'auth/popup-blocked':'Your browser blocked the popup. Trying a different way...',
-  'auth/api-key-not-valid.-please-pass-a-valid-api-key.':'Firebase is misconfigured (invalid API key).'
-};
-const run=fn=>async()=>{err();try{await fn()}catch(e){err(FRIENDLY[e.code]||e.message||'Something went wrong. Try again.')}};
-$('#signin').onclick=run(()=>signInWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
-$('#signup').onclick=run(()=>createUserWithEmailAndPassword(auth,$('#em').value.trim(),$('#pw').value));
-const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-$('#google').onclick=run(async()=>{
-  const p=new GoogleAuthProvider();
-  if(isMobile){await signInWithRedirect(auth,p);return}
-  try{await signInWithPopup(auth,p)}catch(e){
-    if(e.code==='auth/popup-blocked'||e.code==='auth/cancelled-popup-request')await signInWithRedirect(auth,p);else throw e;
-  }
-});
-getRedirectResult(auth).catch(e=>err(FRIENDLY[e.code]||('Google sign-in failed: '+(e.message||e.code||'unknown error'))));
-$('#signout').onclick=()=>signOut(auth);
+$('#cmpFree').textContent=(P.freeLoveLimit||3)+' total';
+$('#country').innerHTML=LIST.filter(c=>P.countries[c.code]).map(c=>`<option value="${c.code}">${flag(c.code)} ${c.name}</option>`).join('')+'<option value="OTHER">🌍 Other</option>';
+(async()=>{const c=await detectCountry();$('#country').value=P.countries[c]?c:'OTHER';showPrice()})();
+const showPrice=()=>$('#price').textContent=fmt(P.countries[$('#country').value]||P.countries.OTHER);
+$('#country').onchange=showPrice;
 
-// ---- Forgot password (email code via Brevo, no Firebase auth needed) ----
-function showAuth(which){$('#out').hidden=which!=='out';$('#reset').hidden=which!=='reset';$('#verify').hidden=which!=='verify';if(auth.currentUser)$('#in').hidden=which!=='in'}
-$('#forgot').onclick=()=>{err();$('#rem').value=$('#em').value;showAuth('reset');$('#rstep1').hidden=false;$('#rstep2').hidden=true};
-$('#rback1').onclick=()=>showAuth('out');
-async function sendReset(){
-  err();const email=$('#rem').value.trim();if(!email){err('Enter your account email.');return}
-  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'send-reset',email})});
-  const d=await r.json();if(!r.ok){err(d.error||'Could not send the code.');return}
-  $('#rmsg').textContent='Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.';
-  $('#rstep1').hidden=true;$('#rstep2').hidden=false;
-}
-$('#rsend').onclick=sendReset;$('#rresend').onclick=sendReset;
-$('#rconfirm').onclick=async()=>{
-  err();const email=$('#rem').value.trim(),code=$('#rcode').value.trim(),newPassword=$('#rnew').value;
-  if(!code||newPassword.length<6){err('Enter the code and a password of at least 6 characters.');return}
-  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({action:'confirm-reset',email,code,newPassword})});
-  const d=await r.json();if(!r.ok){err(d.error||'Could not reset the password.');return}
-  showAuth('out');err();try{await signInWithEmailAndPassword(auth,email,newPassword)}catch(e){}
-};
-
-// ---- Email verification code (sent after sign-up) ----
-async function sendVerify(){
-  const u=auth.currentUser;if(!u)return;
-  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({action:'send-verify'})});
-  const d=await r.json();$('#vmsg').textContent=r.ok?('Code sent to '+(d.maskedEmail||'your email')+'.'):(d.error||'Could not send the code.');
-}
-$('#vresend').onclick=sendVerify;
-$('#vskip').onclick=()=>showAuth('in');
-$('#vconfirm').onclick=async()=>{
-  err();const u=auth.currentUser;const code=$('#vcode').value.trim();if(!code)return;
-  const r=await fetch('/.netlify/functions/auth-code',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({action:'confirm-verify',code})});
-  const d=await r.json();if(!r.ok){$('#vmsg').textContent=d.error||'Incorrect code.';return}
-  showAuth('in');
-};
 async function refresh(u){
   let data={};
   try{const s=await getDoc(doc(db,'users',u.uid));data=s.exists()?s.data():{}}catch(e){}
-  const until=data.premiumUntil?data.premiumUntil.toDate():null;
-  $('#status').textContent=until&&until>new Date()?'Premium is active until '+until.toLocaleDateString()+'.':'You are on the free plan.';
+  const until=data.premiumUntil?data.premiumUntil.toDate():null,active=until&&until>new Date();
+  const trial=active&&data.trialEndsAt&&until.getTime()<=data.trialEndsAt.toDate().getTime()+1000;
+  const days=active?Math.max(1,Math.ceil((until-Date.now())/86400000)):0;
+  $('#planCard').classList.toggle('on',active);
+  $('#planKicker').textContent=active?(trial?'Free trial':'Premium'):'Free plan';
+  $('#planBig').textContent=active?days+(days===1?' day left':' days left'):'No active plan';
+  $('#planSub').textContent=active
+    ?('Active until '+until.toLocaleDateString()+(trial?'. Enjoy full Premium while your trial lasts.':'.'))
+    :(data.trialEndsAt?'Your free trial has ended. Upgrade any time to unlock everything again.':'Upgrade to unlock unlimited love messages and remove the watermark.');
+  $('#upgrade').hidden=false;
+  $('#pay').textContent=active&&!trial?'Add 30 more days':'Pay for Premium';
   const photo=data.photoURL||u.photoURL;
   if(photo){$('#avatarImg').src=photo;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true}
 }
 
 // ---- Profile photo ----
-// Base64, resized client-side — same approach as WoodPayVTU: no Storage
-// bucket needed, just a small square JPEG saved straight on the user doc.
+// Base64, resized client-side: no Storage bucket needed, just a small square JPEG saved on the user doc.
 $('#avatarBtn').onclick=()=>$('#avatarFile').click();
 $('#avatarFile').onchange=()=>{
   const u=auth.currentUser,file=$('#avatarFile').files[0];$('#avatarFile').value='';
@@ -210,14 +144,13 @@ function watchNotifications(u){
     $('#notifList').innerHTML=snap.docs.map(d=>{
       const n=d.data();
       const when=n.createdAt&&n.createdAt.toDate?n.createdAt.toDate().toLocaleDateString():'';
-      return `<div class="notif ${n.read?'':'unread'}" data-id="${d.id}"><b>${n.title||''}</b><span>${n.body||''} · ${when}</span></div>`;
+      return `<div class="glass notif ${n.read?'':'unread'}" data-id="${d.id}"><b>${n.title||''}</b><span>${n.body||''} · ${when}</span></div>`;
     }).join('');
     $$('.notif').forEach(el=>el.onclick=()=>updateDoc(doc(db,'users',u.uid,'notifications',el.dataset.id),{read:true}).catch(()=>{}));
   },()=>{});
 }
-const $$=s=>[...document.querySelectorAll(s)];
 
-// ---- Push notifications (Web Push / VAPID, same pattern as WoodPayVTU) ----
+// ---- Push notifications (Web Push / VAPID) ----
 let _vapidCache=null;
 async function getVapidKey(){
   if(_vapidCache)return _vapidCache;
@@ -268,8 +201,9 @@ $('#pushToggle')?.addEventListener('change',async()=>{
     $('#pushLabel').textContent='Get notified on this device';
   }
 });
+
 async function verifyPayment(u,transactionId,txRef,country){
-  $('#status').textContent='Verifying your payment...';
+  $('#planBig').textContent='Verifying your payment...';
   try{
     const res=await fetch('/.netlify/functions/verify-premium',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken()},body:JSON.stringify({transactionId,txRef,country})});
     const d=await res.json();
@@ -279,7 +213,7 @@ async function verifyPayment(u,transactionId,txRef,country){
 }
 onAuthStateChanged(auth,async u=>{
   if(!u){location.replace('/login?next=/account');return}
-  showAuth('in');await refresh(u);watchNotifications(u);initPushToggle();
+  await refresh(u);watchNotifications(u);initPushToggle();
   // Some payment methods (bank transfer, USSD) leave the inline checkout and
   // come back via redirect instead of firing the in-page callback. Flutterwave
   // appends these params to redirect_url, so pick up the payment here too.
@@ -292,11 +226,9 @@ onAuthStateChanged(auth,async u=>{
     history.replaceState({},'',location.pathname);
     if(qs.get('status')!=='successful')err('Payment was not completed.');
   }
-  const next=qs.get('next');
-  if(next&&next.startsWith('/'))location.href=next;
 });
 $('#pay').onclick=()=>{
-  err();const u=auth.currentUser,c=$('#country').value,p=P.countries[c];
+  err();const u=auth.currentUser,c=$('#country').value,p=P.countries[c]||P.countries.OTHER;
   if(FLW_PUBLIC_KEY.startsWith('PASTE')){err('Payments are not switched on yet.');return}
   const txRef='OQ-'+u.uid.slice(0,8)+'-'+Date.now();
   sessionStorage.setItem('lumora_pay_country',c);
@@ -310,4 +242,5 @@ $('#pay').onclick=()=>{
     onclose(){}
   });
 };
+$('#signout').onclick=()=>signOut(auth);
 </script></body></html>

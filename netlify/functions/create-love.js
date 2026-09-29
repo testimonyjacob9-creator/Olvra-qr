@@ -14,7 +14,7 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 const out = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-const FREE_LIMIT = 15;
+const FREE_LIMIT = require("../../pricing.json").freeLoveLimit || 15;
 const ANIMS = ["couple", "hearts", "confetti", "typing"];
 
 exports.handler = async (event) => {

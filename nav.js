@@ -4,7 +4,7 @@
 // the bell/Me link just point to /account, which itself requires sign-in.
 import { auth, db } from "/firebase-init.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { doc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-9z" stroke-linejoin="round"/></svg>',
@@ -33,7 +33,7 @@ export function mountNav({ showLogo = true } = {}) {
     const bar = document.createElement("div");
     bar.className = "appbar";
     bar.innerHTML = `<a class="logo" href="/">lum<span>ora</span></a>
-      <div class="appbar-r"><a class="bellbtn" id="navBell" href="/account#notifications" aria-label="Notifications">🔔<span class="bell-badge" id="navBellBadge"></span></a></div>`;
+      <div class="appbar-r"><a class="plan-pill free" id="navPlan" href="/account" hidden></a><a class="bellbtn" id="navBell" href="/account#notifications" aria-label="Notifications">🔔<span class="bell-badge" id="navBellBadge"></span></a></div>`;
     document.body.prepend(bar);
   }
 
@@ -57,7 +57,16 @@ export function mountNav({ showLogo = true } = {}) {
     }
     const badge = document.getElementById("navBellBadge");
     if (!badge) return;
-    if (!u) { badge.classList.remove("on"); return; }
+    if (!u) { badge.classList.remove("on"); const p = document.getElementById("navPlan"); if (p) p.hidden = true; return; }
+    const planEl = document.getElementById("navPlan");
+    if (planEl) onSnapshot(doc(db, "users", u.uid), (s) => {
+      const d = s.exists() ? s.data() : {}, until = d.premiumUntil && d.premiumUntil.toDate ? d.premiumUntil.toDate() : null;
+      const left = until ? Math.ceil((until - Date.now()) / 86400000) : 0;
+      planEl.hidden = false;
+      const trial = d.trialEndsAt && until && until.getTime() <= d.trialEndsAt.toDate().getTime() + 1000;
+      planEl.className = "plan-pill" + (left > 0 ? "" : " free");
+      planEl.textContent = left > 0 ? (trial ? "Trial · " : "Premium · ") + left + (left === 1 ? " day left" : " days left") : "Free plan";
+    }, () => {});
     const q = query(collection(db, "users", u.uid, "notifications"), where("read", "==", false));
     unsub = onSnapshot(q, (snap) => {
       const n = snap.size;

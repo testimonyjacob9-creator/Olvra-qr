@@ -7,33 +7,49 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <style>
-body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
-.auth{min-height:100dvh;display:flex;flex-direction:column;justify-content:center;max-width:440px;margin:0 auto;padding:24px 20px}
-.auth .logo{text-align:center;font-size:1.7rem;margin-bottom:22px;display:block}
-.auth .card{padding:28px 24px;border-radius:28px}
-.auth h1{font-size:1.6rem;margin:0 0 6px}
-.auth .seg{margin:18px 0 4px}
-.auth .seg button{padding:11px 6px}
-.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:.8rem;margin:20px 0 0}
+body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);--veil:linear-gradient(115deg,rgba(38,6,40,.78),rgba(110,16,70,.42) 55%,rgba(255,140,110,.16))}
+#petals{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.stage{position:relative;z-index:2;min-height:100dvh;display:grid;grid-template-columns:1fr;align-content:center;gap:26px;max-width:1080px;margin:0 auto;padding:28px 20px}
+@media(min-width:900px){.stage{grid-template-columns:1.15fr .85fr;gap:64px;align-items:center}}
+.pitch{color:#fff;text-shadow:0 2px 24px rgba(30,0,30,.35)}
+.pitch .logo{color:#fff;font-size:1.6rem;text-decoration:none;display:inline-block}.pitch .logo span{color:#ffb3cc}
+.pitch h1{color:#fff;font-size:clamp(2.3rem,7vw,4.2rem);line-height:1.02;margin:18px 0 14px;font-weight:700}
+.pitch p{font-size:1.05rem;max-width:44ch;opacity:.92;line-height:1.55}
+.trial{display:inline-flex;align-items:center;gap:10px;margin-top:22px;padding:12px 18px;border-radius:99px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);font-weight:700;font-size:.92rem}
+.pitch .fine2{margin-top:26px;font-size:.78rem;opacity:.75}
+.pitch .fine2 a{color:#fff}
+@media(max-width:899px){.pitch p,.pitch .fine2{display:none}.pitch h1{font-size:2.2rem;margin:10px 0 0}.trial{margin-top:14px}}
+.auth-card{padding:28px 24px;border-radius:28px;width:100%;max-width:440px;justify-self:center}
+.auth-card h2{font-size:1.6rem;margin:0 0 4px}
+.auth-card .seg{margin:16px 0 2px}
+.or{display:flex;align-items:center;gap:12px;color:var(--dim);font-size:.8rem;margin:18px 0 0}
 .or::before,.or::after{content:"";flex:1;height:1px;background:var(--line)}
-.fine{text-align:center;color:var(--dim);font-size:.8rem;margin-top:18px}.fine a{color:var(--accent)}
-.auth .txt{display:block;margin:14px auto 0}
+.fine{text-align:center;color:var(--dim);font-size:.78rem;margin-top:16px}
+.auth-card .txt{display:block;margin:12px auto 0}
 .pw{position:relative}.pw button{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:0;color:var(--dim);font:inherit;font-weight:700;font-size:.8rem;cursor:pointer;padding:8px}
 .pw input{padding-right:64px}
+.cnote{font-size:.8rem;color:var(--dim);margin-top:6px;min-height:1.2em}
+select{width:100%;border-radius:14px;padding:14px 16px;font:inherit}
 </style>
 <link rel="stylesheet" href="/app.css">
 </head><body>
-<main class="auth">
-<a class="logo" href="/">lum<span>ora</span></a>
-<div class="glass card">
-
+<canvas id="petals" aria-hidden="true"></canvas>
+<main class="stage">
+  <section class="pitch">
+    <a class="logo" href="/">lum<span>ora</span></a>
+    <h1>Connect globally. Share the love.</h1>
+    <p>Send love messages that feel real, make QR codes and business cards, and chat with friends in any country.</p>
+    <div class="trial">🎁 New accounts get 7 days of Premium free</div>
+  </section>
+  <div class="glass auth-card">
   <div id="pMain">
-    <h1 id="ttl">Welcome back</h1>
+    <h2 id="ttl">Welcome back</h2>
     <p class="sub" id="sub">Sign in to use Lumora.</p>
     <div class="seg" role="group" aria-label="Sign in or create account">
       <button type="button" id="tIn" aria-pressed="true">Sign in</button>
       <button type="button" id="tUp" aria-pressed="false">Create account</button>
     </div>
+    <div id="cRow" hidden><label for="country">Your country</label><select id="country" aria-label="Country"></select><p class="cnote" id="cnote"></p></div>
     <label for="em">Email</label><input id="em" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com">
     <label for="pw">Password</label>
     <div class="pw"><input id="pw" type="password" autocomplete="current-password" placeholder="At least 6 characters"><button type="button" id="showPw" aria-label="Show password">Show</button></div>
@@ -44,7 +60,7 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
   </div>
 
   <div id="pReset" hidden>
-    <h1>Reset password</h1>
+    <h2>Reset password</h2>
     <div id="r1">
       <p class="sub">We'll email you a 6-digit code.</p>
       <label for="rem">Account email</label><input id="rem" type="email" inputmode="email" autocomplete="email">
@@ -59,20 +75,21 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
   </div>
 
   <div id="pVerify" hidden>
-    <h1>Verify your email</h1>
-    <p class="sub" id="vmsg">Sending your code...</p>
+    <h2>Verify your email</h2>
+    <p class="sub" id="vmsg">Sending your code...</p><p class="sub">Verify your email to unlock your free Premium trial.</p>
     <label for="vcode">6-digit code</label><input id="vcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
     <div class="acts"><button class="btn pri" id="vconfirm" type="button">Verify email</button><button class="btn" id="vresend" type="button">Resend code</button></div>
-    <button class="txt" id="vskip" type="button">Skip for now</button>
+    <button class="txt" id="vskip" type="button">Skip for now (no free trial)</button>
   </div>
 
   <p id="err" role="alert"></p>
-</div>
-<p class="fine">By continuing you agree to the <a href="/terms">Terms &amp; Conditions</a>.</p>
+    <p class="fine">By continuing you agree to the <a href="/terms">Terms &amp; Conditions</a>.</p>
+  </div>
 </main>
 
 <script type="module">
 import {auth} from '/firebase-init.js';
+import {LIST,flag,nameOf,detectCountry} from '/countries.js';
 import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 const $=s=>document.querySelector(s),err=m=>$('#err').textContent=m||'';
 const FN='/.netlify/functions/auth-code';
@@ -103,6 +120,7 @@ function setMode(m){
   $('#go').textContent=m==='in'?'Sign in':'Create account';
   $('#pw').autocomplete=m==='in'?'current-password':'new-password';
   $('#forgot').hidden=m!=='in';
+  $('#cRow').hidden=m!=='up';
 }
 $('#tIn').onclick=()=>setMode('in');$('#tUp').onclick=()=>setMode('up');
 if(new URLSearchParams(location.search).get('mode')==='signup')setMode('up');
@@ -110,6 +128,8 @@ $('#showPw').onclick=()=>{const p=$('#pw'),s=p.type==='password';p.type=s?'text'
 $('#go').onclick=run(async()=>{
   const email=$('#em').value.trim(),pw=$('#pw').value;
   if(!email||!pw){err('Enter your email and password.');return}
+  if(mode==='up'&&!$('#country').value){err('Choose your country.');return}
+  saveCountry();
   $('#go').disabled=true;
   try{await(mode==='in'?signInWithEmailAndPassword:createUserWithEmailAndPassword)(auth,email,pw)}finally{$('#go').disabled=false}
 });
@@ -118,6 +138,7 @@ $('#pw').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
 // ---- Google ----
 const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 $('#google').onclick=run(async()=>{
+  saveCountry();
   const p=new GoogleAuthProvider();
   if(isMobile){await signInWithRedirect(auth,p);return}
   try{await signInWithPopup(auth,p)}catch(e){
@@ -172,7 +193,7 @@ async function finish(){
   if(finishing)return;finishing=true;
   const u=auth.currentUser;
   try{
-    const r=await fetch('/.netlify/functions/ensure-user',{method:'POST',headers:{Authorization:'Bearer '+await u.getIdToken()}});
+    const r=await fetch('/.netlify/functions/ensure-user',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken(true)},body:JSON.stringify({country:sessionStorage.getItem('lumora_country')||''})});
     if(r.status===401||r.status===403){await auth.signOut();finishing=false;panel('pMain');err(FRIENDLY['auth/user-disabled']);return}
     if(r.ok)sessionStorage.setItem('lumora_ok_'+u.uid,'1');
   }catch(e){}
@@ -186,5 +207,43 @@ onAuthStateChanged(auth,u=>{
   }
   finish();
 });
+// ---- country: options, auto-detect, remember through redirects ----
+$('#country').innerHTML='<option value="">Select your country</option>'+LIST.map(c=>`<option value="${c.code}">${flag(c.code)}  ${c.name}</option>`).join('');
+const saveCountry=()=>{const v=$('#country').value;if(v)sessionStorage.setItem('lumora_country',v)};
+$('#country').onchange=()=>{saveCountry();$('#cnote').textContent=''};
+(async()=>{
+  const c=sessionStorage.getItem('lumora_country')||await detectCountry();
+  if(c){$('#country').value=c;saveCountry();$('#cnote').textContent='We detected '+nameOf(c)+' '+flag(c)+'. Change it if that\'s wrong.'}
+  else $('#cnote').textContent='Pick the country you live in.';
+})();
+
+// ---- falling petals (canvas). Skipped when the device asks for reduced motion. ----
+(function(){
+  if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+  const cv=$('#petals'),ctx=cv.getContext('2d');let W,H,dpr;
+  const COLORS=['#ffd6e4','#ffb8d0','#ffffff','#ffc9b0','#ff92b5','#fff0f5'];
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const make=(top)=>({x:rnd(0,W),y:top?rnd(-H*.3,-20):rnd(-20,H),s:rnd(7,20),vy:rnd(.5,1.5),ph:rnd(0,6.28),sw:rnd(.6,1.6),r:rnd(0,6.28),vr:rnd(-.02,.02),t:rnd(0,6.28),vt:rnd(.015,.04),c:COLORS[(Math.random()*COLORS.length)|0],a:rnd(.55,.95)});
+  let P=[];
+  function size(){dpr=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);const n=Math.min(44,Math.round(W/26));while(P.length<n)P.push(make(false));P.length=n}
+  addEventListener('resize',size);size();
+  function draw(p){
+    ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.r);ctx.scale(1,Math.max(.25,Math.abs(Math.cos(p.t))));
+    ctx.globalAlpha=p.a;ctx.fillStyle=p.c;const s=p.s;
+    ctx.beginPath();ctx.moveTo(0,-s);ctx.bezierCurveTo(s*.95,-s*.55,s*.8,s*.55,0,s);ctx.bezierCurveTo(-s*.8,s*.55,-s*.95,-s*.55,0,-s);ctx.fill();
+    ctx.globalAlpha=p.a*.35;ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(-s*.15,-s*.25,s*.16,s*.42,.3,0,6.28);ctx.fill();
+    ctx.restore();
+  }
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    for(const p of P){
+      p.y+=p.vy;p.ph+=.012*p.sw;p.x+=Math.sin(p.ph)*.9*p.sw;p.r+=p.vr;p.t+=p.vt;
+      if(p.y>H+30||p.x<-40||p.x>W+40){Object.assign(p,make(true))}
+      draw(p);
+    }
+    requestAnimationFrame(tick);
+  }
+  tick();
+})();
 </script>
 </body></html>
