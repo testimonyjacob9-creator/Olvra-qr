@@ -75,10 +75,9 @@
 </div>
 </div>
 <script type="module">
-import {auth,db,storage} from '/firebase-init.js';
+import {auth,db} from '/firebase-init.js';
 import {onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signInWithPopup,signInWithRedirect,getRedirectResult,GoogleAuthProvider,signOut,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import {doc,getDoc,setDoc,collection,query,orderBy,limit,onSnapshot,updateDoc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {ref,uploadBytes,getDownloadURL} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 import {mountNav} from '/nav.js';
 mountNav({showLogo:false});
 const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X'; // Flutterwave public key (FLWPUBK-...). Safe to be public.
@@ -163,20 +162,35 @@ async function refresh(u){
 }
 
 // ---- Profile photo ----
+// Base64, resized client-side — same approach as WoodPayVTU: no Storage
+// bucket needed, just a small square JPEG saved straight on the user doc.
 $('#avatarBtn').onclick=()=>$('#avatarFile').click();
-$('#avatarFile').onchange=async()=>{
-  const u=auth.currentUser,file=$('#avatarFile').files[0];if(!u||!file)return;
+$('#avatarFile').onchange=()=>{
+  const u=auth.currentUser,file=$('#avatarFile').files[0];$('#avatarFile').value='';
+  if(!u||!file)return;
   if(!file.type.startsWith('image/')){$('#avatarMsg').textContent='Choose an image file.';return}
-  if(file.size>4*1024*1024){$('#avatarMsg').textContent='Image must be under 4MB.';return}
-  $('#avatarMsg').textContent='Uploading...';
-  try{
-    const r=ref(storage,'avatars/'+u.uid);
-    await uploadBytes(r,file);
-    const url=await getDownloadURL(r);
-    await setDoc(doc(db,'users',u.uid),{photoURL:url},{merge:true});
-    $('#avatarImg').src=url;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true;
-    $('#avatarMsg').textContent='Photo updated.';
-  }catch(e){$('#avatarMsg').textContent='Could not upload the photo. Try again.'}
+  if(file.size>8*1024*1024){$('#avatarMsg').textContent='Image must be under 8MB.';return}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const img=new Image();
+    img.onload=async()=>{
+      const SIZE=200;
+      const canvas=document.createElement('canvas');canvas.width=SIZE;canvas.height=SIZE;
+      const ctx=canvas.getContext('2d');
+      const side=Math.min(img.width,img.height),sx=(img.width-side)/2,sy=(img.height-side)/2;
+      ctx.drawImage(img,sx,sy,side,side,0,0,SIZE,SIZE);
+      const dataUrl=canvas.toDataURL('image/jpeg',0.82);
+      $('#avatarMsg').textContent='Updating photo...';
+      try{
+        await setDoc(doc(db,'users',u.uid),{photoURL:dataUrl},{merge:true});
+        $('#avatarImg').src=dataUrl;$('#avatarImg').hidden=false;$('#avatarPlaceholder').hidden=true;
+        $('#avatarMsg').textContent='Photo updated.';
+      }catch(e){$('#avatarMsg').textContent='Could not update the photo. Try again.'}
+    };
+    img.onerror=()=>$('#avatarMsg').textContent='Could not read that image. Try another.';
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
 };
 
 // ---- Notifications ----
