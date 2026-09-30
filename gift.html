@@ -57,7 +57,7 @@ function render(){
     </div>`;
   $('#pickAirtime').onclick=showAirtime;
   $('#pickCash').onclick=showCash;
-  $('#pickWallet').onclick=()=>{location.href='https://woodpay.netlify.app/login?next=/&giftCode='+encodeURIComponent(code)};
+  $('#pickWallet').onclick=()=>{location.href='https://woodpay.netlify.app/?giftCode='+encodeURIComponent(code)};
 }
 
 function showAirtime(){

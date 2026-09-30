@@ -21,6 +21,10 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 const out = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
 const TTL_MS = 10 * 60 * 1000;
+// A second request this soon after the first (double-tap, two tabs, a page
+// reload) must not overwrite the code already sitting in the person's inbox.
+const COOLDOWN_MS = 20 * 1000;
+const justSent = (snap) => snap.exists && Date.now() - (snap.data().created_at || 0) < COOLDOWN_MS;
 const genCode = () => String(Math.floor(100000 + Math.random() * 900000));
 const hash = (s) => crypto.createHash("sha256").update(String(s)).digest("hex");
 const mask = (email) => { const [l, d] = email.split("@"); return `${l.slice(0, 1)}***@${d || ""}`; };
@@ -45,8 +49,10 @@ exports.handler = async (event) => {
       const generic = { sent: true, maskedEmail: mask(email) }; // same response whether or not the account exists
       let user;
       try { user = await admin.auth().getUserByEmail(email); } catch { return out(200, generic); }
+      const resetRef = db.collection("authCodes").doc("reset_" + user.uid);
+      if (justSent(await resetRef.get())) return out(200, generic);
       const code = genCode();
-      await db.collection("authCodes").doc("reset_" + user.uid).set({ code_hash: hash(code), email, expires_at: Date.now() + TTL_MS });
+      await resetRef.set({ code_hash: hash(code), email, created_at: Date.now(), expires_at: Date.now() + TTL_MS });
       const { subject, html } = resetCodeEmail({ name: user.displayName, code });
       try { await sendEmail({ to: email, toName: user.displayName, subject, html }); } catch (e) { console.error("reset email:", e.message); }
       return out(200, generic);
@@ -78,8 +84,10 @@ exports.handler = async (event) => {
       if (!email) return out(400, { error: "No email on this account." });
 
       if (action === "send-verify") {
+        const verifyRef = db.collection("authCodes").doc("verify_" + decoded.uid);
+        if (justSent(await verifyRef.get())) return out(200, { emailSent: true, maskedEmail: mask(email) });
         const code = genCode();
-        await db.collection("authCodes").doc("verify_" + decoded.uid).set({ code_hash: hash(code), expires_at: Date.now() + TTL_MS });
+        await verifyRef.set({ code_hash: hash(code), created_at: Date.now(), expires_at: Date.now() + TTL_MS });
         const { subject, html } = verifyCodeEmail({ name: decoded.name, code });
         let emailSent = true;
         try { await sendEmail({ to: email, toName: decoded.name, subject, html }); } catch (e) { console.error("verify email:", e.message); emailSent = false; }

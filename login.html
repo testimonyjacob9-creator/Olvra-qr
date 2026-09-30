@@ -61,6 +61,7 @@ body{padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
       <label for="rcode">6-digit code</label><input id="rcode" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
       <label for="rnew">New password</label><input id="rnew" type="password" autocomplete="new-password">
       <div class="acts"><button class="btn pri" id="rconfirm" type="button">Set new password</button><button class="btn" id="rresend" type="button">Resend code</button></div>
+      <button class="txt" id="rother" type="button">Use a different email</button>
     </div>
   </div>
 
@@ -134,7 +135,7 @@ $('#go').onclick=run(async()=>{
       const cred=await createUserWithEmailAndPassword(auth,email,pw);
       const {updateProfile}=await import("https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js");
       await updateProfile(cred.user,{displayName:name});
-      sessionStorage.setItem('lumora_signup_phone',phone);
+      localStorage.setItem('lumora_signup_phone',phone);
     }
   }finally{$('#go').disabled=false}
 });
@@ -159,20 +160,39 @@ async function post(body,token){
   const r=await fetch(FN,{method:'POST',headers:{'content-type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify(body)});
   const d=await r.json().catch(()=>({}));return{ok:r.ok,d};
 }
+// The code lives 10 minutes, but the page may not: when someone switches to
+// their email app, Chrome can discard this tab and reload it on return. Keep
+// the "code already sent" step in localStorage so they land back on the code
+// box instead of having to request (and invalidate) another code.
+const CODE_TTL=10*60*1000,RS_KEY='lumora_reset_state';
+const store={
+  get(k){try{const s=JSON.parse(localStorage.getItem(k)||'null');if(s&&Date.now()-s.at<CODE_TTL)return s;localStorage.removeItem(k)}catch(e){}return null},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify({...v,at:Date.now()}))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const minsLeft=s=>Math.max(1,Math.ceil((CODE_TTL-(Date.now()-s.at))/60000));
+function showResetCodeStep(email,masked,at){
+  panel('pReset');$('#rem').value=email;
+  $('#rmsg').textContent='Code sent to '+(masked||'your email')+'. It expires in about '+minsLeft({at})+' min.';
+  $('#r1').hidden=true;$('#r2').hidden=false;
+}
 async function sendReset(){
   err();const email=$('#rem').value.trim();if(!email){err('Enter your account email.');return}
   const {ok,d}=await post({action:'send-reset',email});
   if(!ok){err(d.error||'Could not send the code.');return}
+  store.set(RS_KEY,{email,masked:d.maskedEmail||''});
   $('#rmsg').textContent='Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.';
   $('#r1').hidden=true;$('#r2').hidden=false;
 }
+$('#rother').onclick=()=>{store.del(RS_KEY);$('#rcode').value='';$('#r2').hidden=true;$('#r1').hidden=false;err()};
+{const rs=store.get(RS_KEY);if(rs)showResetCodeStep(rs.email,rs.masked,rs.at)}
 $('#rsend').onclick=sendReset;$('#rresend').onclick=sendReset;
 $('#rconfirm').onclick=async()=>{
   err();const email=$('#rem').value.trim(),code=$('#rcode').value.trim(),newPassword=$('#rnew').value;
   if(!code||newPassword.length<6){err('Enter the code and a password of at least 6 characters.');return}
   const {ok,d}=await post({action:'confirm-reset',email,code,newPassword});
   if(!ok){err(d.error||'Could not reset the password.');return}
-  panel('pMain');$('#em').value=email;
+  store.del(RS_KEY);panel('pMain');$('#em').value=email;
   try{await signInWithEmailAndPassword(auth,email,newPassword)}catch(e){err('Password updated. Sign in with your new password.')}
 };
 
@@ -181,15 +201,17 @@ let verifySent=false;
 async function sendVerify(){
   const u=auth.currentUser;if(!u)return;
   const {ok,d}=await post({action:'send-verify'},await u.getIdToken());
+  if(ok&&d.emailSent!==false)store.set(VKEY(u.uid),{masked:d.maskedEmail||''});
   $('#vmsg').textContent=ok?('Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.'):(d.error||'Could not send the code.');
 }
+const VKEY=uid=>'lumora_verify_state_'+uid;
 $('#vresend').onclick=sendVerify;
 $('#vskip').onclick=()=>finish();
 $('#vconfirm').onclick=async()=>{
   err();const u=auth.currentUser,code=$('#vcode').value.trim();if(!u||!code)return;
   const {ok,d}=await post({action:'confirm-verify',code},await u.getIdToken());
   if(!ok){err(d.error||'Incorrect code.');return}
-  await u.reload().catch(()=>{});finish();
+  store.del(VKEY(u.uid));await u.reload().catch(()=>{});finish();
 };
 
 // ---- after sign-in: make sure the account record exists, then go on ----
@@ -198,9 +220,9 @@ async function finish(){
   if(finishing)return;finishing=true;
   const u=auth.currentUser;
   try{
-    const pendingPhone=sessionStorage.getItem('lumora_signup_phone')||'';
+    const pendingPhone=localStorage.getItem('lumora_signup_phone')||'';
     const r=await fetch('/.netlify/functions/ensure-user',{method:'POST',headers:{'content-type':'application/json',Authorization:'Bearer '+await u.getIdToken(true)},body:JSON.stringify({country:sessionStorage.getItem('lumora_country')||'',phone:pendingPhone})});
-    if(pendingPhone)sessionStorage.removeItem('lumora_signup_phone');
+    if(pendingPhone)localStorage.removeItem('lumora_signup_phone');
     if(r.status===401||r.status===403){await auth.signOut();finishing=false;panel('pMain');err(FRIENDLY['auth/user-disabled']);return}
     if(r.ok)sessionStorage.setItem('lumora_ok_'+u.uid,'1');
   }catch(e){}
@@ -210,7 +232,16 @@ async function finish(){
 onAuthStateChanged(auth,u=>{
   if(!u)return;
   if(u.providerData.some(p=>p.providerId==='password')&&!u.emailVerified){
-    panel('pVerify');if(!verifySent){verifySent=true;sendVerify()}return;
+    panel('pVerify');
+    if(!verifySent){
+      verifySent=true;
+      // Returning from the email app? A code was already sent, so don't send
+      // another one (that would invalidate the one sitting in their inbox).
+      const prev=store.get(VKEY(u.uid));
+      if(prev)$('#vmsg').textContent='Code sent to '+(prev.masked||'your email')+'. It expires in about '+minsLeft(prev)+' min. Tap Resend if you need a new one.';
+      else sendVerify();
+    }
+    return;
   }
   finish();
 });
