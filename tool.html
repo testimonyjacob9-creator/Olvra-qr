@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,11 +13,10 @@
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "SoftwareApplication", "name": "Lumora", "url": "https://lumoral.netlify.app/qr", "applicationCategory": "UtilitiesApplication", "operatingSystem": "Web", "description": "Free QR code and digital business card generator.", "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"}, "publisher": {"@type": "Organization", "name": "Lumora"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Is the QR code generator free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Making QR codes and business cards is free, with no signup needed."}}, {"@type": "Question", "name": "Do you store my links or details?", "acceptedAnswer": {"@type": "Answer", "text": "No. Everything is created in your browser. Nothing you type is uploaded."}}, {"@type": "Question", "name": "Will the QR code expire?", "acceptedAnswer": {"@type": "Answer", "text": "No. The code holds your link or text directly, so it works as long as that link works."}}, {"@type": "Question", "name": "Can I make a WhatsApp QR code?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Choose WhatsApp chat, enter your number with country code, and add an optional first message."}}, {"@type": "Question", "name": "Does it work offline?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Install it from your browser menu and it opens without internet."}}]}</script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#e4e9f3">
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0}
 [hidden]{display:none!important}
@@ -60,12 +59,13 @@ canvas{display:block;width:100%;height:auto;max-width:520px;margin:0 auto;border
 #gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
 #gateScreen .card{max-width:320px;padding:30px 26px;border-radius:24px}
 #gateScreen .e{font-size:44px;margin-bottom:6px}
-</style><link rel="stylesheet" href="/app.css">
+</style><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
 <script>try{if(localStorage.getItem("lumora_authed"))document.documentElement.classList.add("authed")}catch(e){}</script>
 <script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head>
 <body>
 <div id="gateScreen" hidden><div class="glass card">
-  <div class="e">🔒</div>
+  <div class="e"><svg viewBox="0 0 24 24" width="44px" height="44px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><path d="M7 11V8a5 5 0 0110 0v3"/><rect x="5" y="11" width="14" height="10" rx="2"/></svg></div>
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
   <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
   <a class="btn pri" id="gateLink" href="/account">Sign in or create account</a>

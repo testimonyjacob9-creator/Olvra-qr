@@ -35,17 +35,18 @@ export function mountNav({ showLogo = true } = {}) {
     const bar = document.createElement("div");
     bar.className = "appbar";
     bar.innerHTML = `<a class="logo" href="/">lum<span>ora</span></a>
-      <div class="appbar-r"><a class="plan-pill free" id="navPlan" href="/account" hidden></a><span id="navTheme"></span><a class="bellbtn" id="navBell" href="/notifications" aria-label="Notifications">🔔<span class="bell-badge" id="navBellBadge"></span></a></div>`;
+      <div class="appbar-r"><a class="plan-pill free" id="navPlan" href="/account" hidden></a><span id="navTheme"></span><a class="bellbtn" id="navBell" href="/notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" width="20px" height="20px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 7H4c0-1 2-2 2-7z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="bell-badge" id="navBellBadge"></span></a></div>`;
     document.body.prepend(bar);
     mountThemeToggle(document.getElementById("navTheme"));
     mountInstallButton(document.getElementById("navTheme"));
   }
 
-  const path = location.pathname.replace(/\/$/, "") || "/";
+  let path = location.pathname.replace(/\/$/, "") || "/";
+  if (path === "/helper") path = "/chat";
   const nav = document.createElement("div");
   nav.className = "bottom-nav";
   nav.innerHTML = `<div class="bottom-nav-inner">${ITEMS.map(([href, key, label]) => {
-    const active = href === path || (href !== "/" && path.startsWith(href));
+    const active = href === path || (href !== "/" && path.startsWith(href + "/"));
     return `<a class="nav-item${active ? " active" : ""}" href="${href}">${ICONS[key]}<span>${label}</span></a>`;
   }).join("")}</div>`;
   document.body.appendChild(nav);
@@ -69,7 +70,7 @@ export function mountNav({ showLogo = true } = {}) {
       planEl.hidden = false;
       const trial = d.trialEndsAt && until && until.getTime() <= d.trialEndsAt.toDate().getTime() + 1000;
       planEl.className = "plan-pill" + (left > 0 ? "" : " free");
-      planEl.textContent = left > 0 ? (trial ? "Trial · " : "Premium · ") + left + (left === 1 ? " day left" : " days left") : "Free plan";
+      planEl.innerHTML = left > 0 ? (trial ? "Trial · " : "Premium · ") + left + `<span class="pl-full"> ${left === 1 ? "day" : "days"} left</span><span class="pl-short">d</span>` : "Free plan";
     }, () => {});
     const q = query(collection(db, "users", u.uid, "notifications"), where("read", "==", false));
     unsub = onSnapshot(q, (snap) => {

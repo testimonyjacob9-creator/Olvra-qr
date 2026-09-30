@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap');
+600;700;800&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&display=swap');
 /* Lumora — flat design system. One font, one accent, real spacing, no glass/blur/emoji. */
 :root{
   --bg:#ffffff; --bg-2:#f4f5f7; --ink:#15161a; --dim:#6b6f7a; --line:#e6e7eb;
@@ -81,3 +81,31 @@ select option{color:#15161a}
 
 .themebtn{width:40px;height:40px;display:grid;place-items:center;border-radius:10px;background:var(--bg);border:1px solid var(--line);color:var(--ink);cursor:pointer;font-size:16px}
 .themebtn svg{width:19px;height:19px}
+
+
+/* Love-message photo art (restored: the flat redesign dropped these variables, leaving the preview blank) */
+:root{
+  --p-embrace:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%' stop-color='%23ffb199'/><stop offset='45%' stop-color='%23ff6fa5'/><stop offset='100%' stop-color='%236a3fb5'/></linearGradient></defs><rect width='800' height='800' fill='url(%23g)'/><g fill='%23ffffff' opacity='.16'><path d='M330 560 C260 500 260 420 320 400 C350 390 380 405 400 430 C420 405 450 390 480 400 C540 420 540 500 470 560 L400 620 Z'/></g><g stroke='%23ffffff' stroke-width='3' opacity='.2' fill='none'><circle cx='400' cy='400' r='260'/><circle cx='400' cy='400' r='330'/></g></svg>");
+  --p-beach:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0%' stop-color='%23ffe3b0'/><stop offset='45%' stop-color='%23ff9d7a'/><stop offset='100%' stop-color='%233a5aa8'/></linearGradient></defs><rect width='800' height='800' fill='url(%23g)'/><circle cx='400' cy='260' r='90' fill='%23fff6df' opacity='.85'/><path d='M0 520 Q200 470 400 520 T800 520 V800 H0 Z' fill='%23274b8e' opacity='.55'/><path d='M0 600 Q200 560 400 600 T800 600 V800 H0 Z' fill='%231c3a70' opacity='.65'/></svg>");
+  --p-golden:url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 800'><defs><radialGradient id='g' cx='70%' cy='25%' r='100%'><stop offset='0%' stop-color='%23fff1c2'/><stop offset='45%' stop-color='%23ff9d6a'/><stop offset='100%' stop-color='%23c8437a'/></radialGradient></defs><rect width='800' height='800' fill='url(%23g)'/><circle cx='560' cy='220' r='120' fill='%23fff8e3' opacity='.8'/><path d='M0 560 L800 560 L800 800 L0 800 Z' fill='%232a1230' opacity='.35'/></svg>");
+  --g1:#d61f69; --g2:#ff7a59; --serif:var(--font);
+}
+
+/* Sign-in gate overlay: opaque scrim + blur so the page behind never shows through */
+#gateScreen{background:color-mix(in srgb,var(--bg) 82%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#gateScreen .card{box-shadow:0 20px 60px rgba(0,0,0,.25) !important}
+/* App bar: never let the plan pill overlap the logo */
+.appbar{gap:8px}
+.appbar .logo{flex:none}
+.appbar-r{min-width:0;gap:8px}
+.plan-pill{margin-right:0;white-space:nowrap;padding:6px 10px}
+.pl-short{display:none}
+@media(max-width:430px){.pl-full{display:none}.pl-short{display:inline}}
+
+/* Footer (legal links) */
+.foot{max-width:960px;margin:0 auto;padding:10px 20px 28px;color:var(--dim);font-size:.82rem;display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center}
+.foot a{color:var(--dim)}.foot a:hover{color:var(--accent)}
+
+.pulse svg{display:block}
+.opt span:first-child{color:var(--accent);display:grid;place-items:center}
+#olive-btn{display:grid;place-items:center}

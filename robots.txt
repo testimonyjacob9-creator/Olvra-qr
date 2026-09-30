@@ -2,4 +2,11 @@ User-agent: *
 Allow: /
 Disallow: /l/
 Disallow: /admin
+Disallow: /g/
+Disallow: /gift
+Disallow: /notifications
+Disallow: /login
+Disallow: /helper
+Disallow: /chat
+Disallow: /account
 Sitemap: https://lumoral.netlify.app/sitemap.xml

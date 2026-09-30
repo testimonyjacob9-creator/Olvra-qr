@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Help & Support – Lumora</title>
+<title>Help &amp; Support – Lumora</title>
 <meta name="description" content="How to use Lumora, frequently asked questions, and contact support.">
-<link rel="canonical" href="https://lumoral.netlify.app/help"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Lumora"><meta property="og:title" content="Help &amp; Support – Lumora"><meta property="og:description" content="How to use Lumora, frequently asked questions, and contact support."><meta property="og:url" content="https://lumoral.netlify.app/help"><meta property="og:image" content="https://lumoral.netlify.app/og-image.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://lumoral.netlify.app/help"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <style>
 .legal h2{font-size:1.05rem;margin:26px 0 8px}
@@ -44,12 +45,11 @@
 <details class="faq"><summary>Got an inappropriate message?</summary><p>Open it and tap "Report this message" at the bottom.</p></details>
 
 <p>Still stuck? Tap the chat bubble to talk to Olives.</p>
-<p style="margin-top:30px"><a href="/terms">Terms &amp; Conditions</a></p>
-</div>
+</div><footer class="foot"><span>&copy; 2026 Lumora</span><a href="/help">Help</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></footer>
 
-<button id="olive-btn" aria-label="Chat with Olives">🫒</button>
+<button id="olive-btn" aria-label="Chat with Olives"><svg viewBox="0 0 24 24" width="24px" height="24px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16a1 1 0 011 1v10a1 1 0 01-1 1H10l-5 4v-4H4a1 1 0 01-1-1V6a1 1 0 011-1z"/></svg></button>
 <div id="olive-panel" hidden>
-  <div id="olive-head"><span>🫒 Olives</span><button id="olive-close" style="background:none;border:0;font-size:18px;cursor:pointer;color:var(--dim)">✕</button></div>
+  <div id="olive-head"><span>Olives &middot; Support</span><button id="olive-close" style="background:none;border:0;font-size:18px;cursor:pointer;color:var(--dim)">✕</button></div>
   <div id="olive-log"></div>
   <div id="olive-foot"><input id="olive-in" placeholder="Ask a question..."><button id="olive-send">Send</button></div>
 </div>
@@ -80,7 +80,7 @@ function reply(msg) {
 const $ = s => document.querySelector(s);
 const log = $("#olive-log");
 function add(who, text) { const d = document.createElement("div"); d.className = "omsg " + who; d.textContent = text; log.append(d); log.scrollTop = log.scrollHeight; }
-add("bot", "👋 Hi, I'm Olives! Ask me about accounts, premium or reporting a message — or type your question and I'll pass it to a human if I can't answer it.");
+add("bot", "Hi, I'm Olives! Ask me about accounts, premium or reporting a message — or type your question and I'll pass it to a human if I can't answer it.");
 
 $("#olive-btn").onclick = () => { $("#olive-panel").hidden = !$("#olive-panel").hidden; };
 $("#olive-close").onclick = () => { $("#olive-panel").hidden = true; };

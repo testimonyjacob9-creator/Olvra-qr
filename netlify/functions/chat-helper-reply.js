@@ -1,15 +1,9 @@
-// netlify/functions/chat-helper-reply.js
-//
-// Server-side endpoint for Chat helper. Keeps the Anthropic API key off
-// the client. Wire this up once an API key is available:
-//   1. Set ANTHROPIC_API_KEY in Netlify's environment variables.
-//   2. Fill in PERSONA_PROMPTS below with each persona's system prompt.
-//   3. Uncomment the fetch() call and remove the stub response.
-//   4. In helper.html, point getReplies() at this function (see the
-//      commented-out fetch() there for the exact shape).
-//
-// Body: { persona, message }
-// Returns: { ok, replies: [string, string] } or { ok:false, error }
+// POST /.netlify/functions/chat-helper-reply   Authorization: Bearer <Firebase ID token>
+// Body: { persona, message }  ->  { replies: [string, string] }
+// Requires ANTHROPIC_API_KEY in Netlify env vars. Messages are sent to the AI
+// provider to generate replies and are not stored by Lumora.
+const { requireActive } = require("./_lib/guard");
+const { ok, fail } = require("./_lib/respond");
 
 const PERSONA_PROMPTS = {
   nonchalant: "You write cool, short replies that don't try too hard.",
@@ -24,59 +18,39 @@ const PERSONA_PROMPTS = {
   confrontation: "You roleplay as the other person in a hard conversation the user needs to practise — you deflect and deny plausibly — then give a short, honest red-flags recap at the end.",
 };
 
+const MODEL = process.env.HELPER_MODEL || "claude-haiku-4-5-20251001";
+const err = (statusCode, message) => Object.assign(new Error(message), { statusCode });
+
 exports.handler = async (event) => {
-  if (event.httpMethod !== 'POST') {
-    return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
-  }
-  let body;
-  try { body = JSON.parse(event.body); }
-  catch (e) { return { statusCode: 400, body: JSON.stringify({ ok: false, error: 'Invalid JSON' }) }; }
-
-  const { persona, message } = body;
-  const systemPrompt = PERSONA_PROMPTS[persona];
-  if (!systemPrompt || !message) {
-    return { statusCode: 400, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Missing or unknown persona, or missing message.' }) };
-  }
-
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
-  if (!ANTHROPIC_API_KEY) {
-    // Stub: no key configured yet. Returns a clearly-labelled placeholder
-    // instead of a real generation, so the front end keeps working.
-    return {
-      statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ok: true,
-        replies: [
-          `[Stub] ANTHROPIC_API_KEY is not set yet — this is a placeholder ${persona} reply.`,
-          `[Stub] Add the key in Netlify env vars to get real replies.`
-        ]
-      })
-    };
-  }
-
   try {
-    // const res = await fetch('https://api.anthropic.com/v1/messages', {
-    //   method: 'POST',
-    //   headers: {
-    //     'x-api-key': ANTHROPIC_API_KEY,
-    //     'anthropic-version': '2023-06-01',
-    //     'Content-Type': 'application/json'
-    //   },
-    //   body: JSON.stringify({
-    //     model: 'claude-sonnet-4-6',
-    //     max_tokens: 400,
-    //     system: systemPrompt + " Give exactly two short reply options, one per line, no numbering, no preamble.",
-    //     messages: [{ role: 'user', content: message }]
-    //   })
-    // });
-    // const data = await res.json();
-    // const text = (data.content || []).map(b => b.text || '').join('\n');
-    // const replies = text.split('\n').map(s => s.trim()).filter(Boolean).slice(0, 2);
-    // return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: true, replies }) };
+    if (event.httpMethod !== "POST") throw err(405, "Method not allowed.");
+    await requireActive(event);
 
-    return { statusCode: 501, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: 'Not yet wired to Anthropic API.' }) };
-  } catch (e) {
-    return { statusCode: 500, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ok: false, error: e.message }) };
-  }
+    let body;
+    try { body = JSON.parse(event.body || "{}"); } catch { throw err(400, "Invalid request."); }
+    const persona = String(body.persona || "");
+    const message = String(body.message || "").trim().slice(0, 2000);
+    const systemPrompt = PERSONA_PROMPTS[persona];
+    if (!systemPrompt || !message) throw err(400, "Choose a voice and enter a message.");
+
+    const key = process.env.ANTHROPIC_API_KEY;
+    if (!key) throw err(503, "Chat helper is temporarily unavailable. Please try again later.");
+
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+      body: JSON.stringify({
+        model: MODEL,
+        max_tokens: 400,
+        system: systemPrompt + " Give exactly two short reply options, one per line, no numbering, no quotation marks, no preamble.",
+        messages: [{ role: "user", content: message }],
+      }),
+    });
+    if (!res.ok) { console.error("Anthropic API", res.status, await res.text().catch(() => "")); throw err(502, "Couldn't get a reply right now. Please try again."); }
+    const data = await res.json();
+    const text = (data.content || []).map((b) => b.text || "").join("\n");
+    const replies = text.split("\n").map((x) => x.trim()).filter(Boolean).slice(0, 2);
+    if (!replies.length) throw err(502, "Couldn't get a reply right now. Please try again.");
+    return ok({ replies });
+  } catch (e) { return fail(e); }
 };

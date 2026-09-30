@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light"><head>
+<html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>A gift for you – Lumora</title><meta name="robots" content="noindex,nofollow">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/app.css">
 <script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
 <style>
@@ -43,16 +44,16 @@ async function load(){
 }
 
 function render(){
-  if(VOUCHER.status==='redeemed'){card.innerHTML='<div class="state"><div class="ok-icon">🎉</div>This gift has already been redeemed.</div>';return}
+  if(VOUCHER.status==='redeemed'){card.innerHTML='<div class="state"><div class="ok-icon"><svg viewBox="0 0 24 24" width="2.5rem" height="2.5rem" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></div>This gift has already been redeemed.</div>';return}
   if(VOUCHER.status==='payout_pending'){card.innerHTML='<div class="state"><div class="ok-icon">⏳</div>This gift is on its way to a bank account — already claimed.</div>';return}
   card.innerHTML=`
     <p class="sub">You've received a gift</p>
     <div class="amt">₦${VOUCHER.amount}</div>
     <div id="msg">${esc(VOUCHER.message)||''}</div>
     <div id="opts" class="opts">
-      <button class="opt" id="pickAirtime"><span>📱</span><span><b>Airtime or data</b><small>Sent straight to a phone number</small></span></button>
-      <button class="opt" id="pickCash"><span>🏦</span><span><b>Cash to bank</b><small>Paid within 24 hours</small></span></button>
-      <button class="opt" id="pickWallet"><span>💳</span><span><b>Save to WoodPay wallet</b><small>Optional — needs a free WoodPay account</small></span></button>
+      <button class="opt" id="pickAirtime"><span><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg></span><span><b>Airtime or data</b><small>Sent straight to a phone number</small></span></button>
+      <button class="opt" id="pickCash"><span><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/></svg></span><span><b>Cash to bank</b><small>Paid within 24 hours</small></span></button>
+      <button class="opt" id="pickWallet"><span><svg viewBox="0 0 24 24" width="1.5em" height="1.5em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h3"/></svg></span><span><b>Save to WoodPay wallet</b><small>Optional — needs a free WoodPay account</small></span></button>
     </div>`;
   $('#pickAirtime').onclick=showAirtime;
   $('#pickCash').onclick=showCash;
@@ -76,7 +77,7 @@ function showAirtime(){
       const res=await fetch('/.netlify/functions/redeem-gift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,type:'airtime',phone,network})});
       const data=await res.json();
       if(!data.ok)throw new Error(data.error||'Could not send. Try again.');
-      card.innerHTML='<div class="state"><div class="ok-icon">✅</div>Sent! Check the phone in a moment.</div>';
+      card.innerHTML='<div class="state"><div class="ok-icon"><svg viewBox="0 0 24 24" width="2.5rem" height="2.5rem" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></div>Sent! Check the phone in a moment.</div>';
     }catch(e){$('#err').textContent=e.message;$('#go').disabled=false;$('#go').textContent='Send airtime'}
   };
 }
@@ -109,7 +110,7 @@ async function showCash(){
       const data=await res.json();
       if(!data.ok){$('#accName').textContent='Could not verify that account.';return}
       resolvedName=data.accountName;
-      $('#accName').textContent='✓ '+data.accountName;
+      $('#accName').textContent=data.accountName;
       $('#go').disabled=false;
     }catch(e){$('#accName').textContent='Could not verify that account.'}
   }
@@ -123,7 +124,7 @@ async function showCash(){
       const res=await fetch('/.netlify/functions/redeem-gift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,type:'cash',accountNumber,accountName:resolvedName,bankCode,bankName})});
       const data=await res.json();
       if(!data.ok)throw new Error(data.error||'Could not claim. Try again.');
-      card.innerHTML='<div class="state"><div class="ok-icon">✅</div>Claimed — you\\'ll be paid within 24 hours.</div>';
+      card.innerHTML='<div class="state"><div class="ok-icon"><svg viewBox="0 0 24 24" width="2.5rem" height="2.5rem" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></svg></div>Claimed — you\'ll be paid within 24 hours.</div>';
     }catch(e){$('#err').textContent=e.message;$('#go').disabled=false;$('#go').textContent='Claim to this account'}
   };
 }

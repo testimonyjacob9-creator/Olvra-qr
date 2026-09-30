@@ -3,8 +3,9 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Send a Love Message – Lumora</title>
 <meta name="description" content="Pick a photo, write from the heart, choose an animation and share one private link on WhatsApp.">
-<link rel="canonical" href="https://lumoral.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#d61f69">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<meta property="og:type" content="website"><meta property="og:site_name" content="Lumora"><meta property="og:title" content="Send a Love Message – Lumora"><meta property="og:description" content="Pick a photo, write from the heart, choose an animation and share one private link on WhatsApp."><meta property="og:url" content="https://lumoral.netlify.app/love"><meta property="og:image" content="https://lumoral.netlify.app/og-image.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://lumoral.netlify.app/love"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <style>
 #gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
@@ -21,7 +22,7 @@ body{--veil:linear-gradient(180deg,rgba(255,236,244,.35),rgba(255,255,255,.18) 4
 .pv .sg{margin-top:10px;font-weight:700;font-size:.92rem;text-align:right}
 .pv .empty{opacity:.7}
 .picks{display:flex;gap:12px}
-.ph-th{flex:1;min-width:0;height:78px;border-radius:18px;border:2px solid transparent !important;cursor:pointer;color:#fff;font:700 .72rem 'Plus Jakarta Sans',sans-serif;display:flex;align-items:flex-end;justify-content:center;padding:0 0 7px;
+.ph-th{flex:1;min-width:0;height:78px;border-radius:18px;border:2px solid transparent !important;cursor:pointer;color:#fff;font:700 .72rem var(--font);display:flex;align-items:flex-end;justify-content:center;padding:0 0 7px;
   background:linear-gradient(180deg,transparent 40%,rgba(20,0,25,.7)),var(--ph) center/cover !important;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .ph-th[aria-pressed=true]{border-color:#fff !important;box-shadow:0 0 0 3px var(--g1) !important}
 .p0{--ph:var(--p-golden)}.p1{--ph:var(--p-embrace)}.p2{--ph:var(--p-beach)}
@@ -31,14 +32,13 @@ body{--veil:linear-gradient(180deg,rgba(255,236,244,.35),rgba(255,255,255,.18) 4
 <script>try{if(localStorage.getItem("lumora_authed"))document.documentElement.classList.add("authed")}catch(e){}</script>
 <script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body class="bg-golden">
 <div id="gateScreen" hidden><div class="glass card">
-  <div class="e">🔒</div>
+  <div class="e"><svg viewBox="0 0 24 24" width="44px" height="44px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><path d="M7 11V8a5 5 0 0110 0v3"/><rect x="5" y="11" width="14" height="10" rx="2"/></svg></div>
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to continue</p>
   <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
   <a class="btn pri" id="gateLink" href="/login">Sign in or create account</a>
 </div></div>
 <div id="gatedApp" hidden><div class="wrap">
-<a class="logo" href="/">lum<span>ora</span></a>
-<h1><span class="pulse" aria-hidden="true">❤️</span> Send a love message</h1>
+<h1><span class="pulse" aria-hidden="true"><svg viewBox="0 0 24 24" width="1em" height="1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent);fill:currentColor"><path d="M12 21s-7.5-4.6-10-9.3C.5 8 2.3 4.5 6 4c2-.3 3.7.7 6 3 2.3-2.3 4-3.3 6-3 3.7.5 5.5 4 4 7.7C19.5 16.4 12 21 12 21z"/></svg></span> Send a love message</h1>
 <p class="sub">Pick a photo, write from the heart, then share one private link.</p>
 
 <div id="compose">

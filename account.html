@@ -2,9 +2,10 @@
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Me – Lumora</title>
+<meta name="robots" content="noindex">
 <meta name="description" content="Your Lumora account, plan and notifications.">
-<link rel="canonical" href="https://lumoral.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#e4e9f3">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="canonical" href="https://lumoral.netlify.app/account"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/love.css">
 <link rel="stylesheet" href="/nav.css">
 <script src="https://checkout.flutterwave.com/v3.js"></script>
@@ -29,7 +30,7 @@
 <script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body><div class="wrap">
 <h1>Me</h1>
 <div id="avatarWrap">
-  <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" class="glass">🙂</div>
+  <img id="avatarImg" src="" alt="" hidden><div id="avatarPlaceholder" class="glass" style="color:var(--dim)"><svg viewBox="0 0 24 24" width="32px" height="32px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"/></svg></div>
   <div><button class="btn" id="avatarBtn" type="button">Change photo</button><input id="avatarFile" type="file" accept="image/*"><p class="sub" id="avatarMsg" style="margin-top:6px"></p></div>
 </div>
 
@@ -49,7 +50,7 @@
   <tr><th>Feature</th><th>Free</th><th>Premium</th></tr>
   <tr><td>Love messages</td><td id="cmpFree">–</td><td>Unlimited</td></tr>
   <tr><td>Business card watermark</td><td>Shown</td><td>Removed</td></tr>
-  <tr><td>Chat with friends</td><td>✅</td><td>✅</td></tr>
+  <tr><td>Chat with friends</td><td><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></td><td><svg viewBox="0 0 24 24" width="1.1em" height="1.1em" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="color:var(--accent)"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></td></tr>
 </table>
 
 <div id="upgrade">

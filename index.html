@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light"><head>
+<html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Lumora – QR codes, business cards, love messages and more</title>
 <meta name="description" content="Lumora is a set of small, useful services: QR codes, digital business cards, animated love messages and a chat reply helper.">
-<link rel="canonical" href="https://lumoral.netlify.app/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://lumoral.netlify.app/"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
 <meta property="og:type" content="website"><meta property="og:title" content="Lumora"><meta property="og:description" content="QR codes, business cards, love messages and a chat reply helper."><meta property="og:image" content="https://lumoral.netlify.app/og-image.png"><meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/app.css">
 <style>
 .hero{max-width:960px;margin:0 auto;padding:4px 20px 6px}
@@ -19,7 +20,7 @@
 :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 </style>
 <script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body>
-<section class="hero"><h1>Lumora</h1><p>Choose a service to begin.</p></section>
+<section class="hero"><h1>Everyday tools, made simple.</h1><p>QR codes, business cards, love messages and a chat reply helper. Free to start, nothing to download.</p></section>
 <main class="grid" aria-label="Services">
   <a class="svc" href="/qr"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM19 14h2v2h-2zM14 19h2v2h-2zM19 19h2v2h-2z"/></svg></span><span><b>QR code</b><small>Links, WhatsApp chats and text.</small></span></a>
   <a class="svc" href="/card"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M6 15.5h5M6 12h3" stroke-linecap="round"/><circle cx="16.5" cy="12" r="2.2"/></svg></span><span><b>Business card</b><small>A card with a code that saves your contact.</small></span></a>
@@ -27,5 +28,6 @@
   <a class="svc" href="/helper"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16a1 1 0 011 1v10a1 1 0 01-1 1H10l-5 4v-4H4a1 1 0 01-1-1V6a1 1 0 011-1z" stroke-linejoin="round"/><circle cx="8.5" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="11" r=".9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="11" r=".9" fill="currentColor" stroke="none"/></svg></span><span><b>Chat helper</b><small>Pick a voice, get a reply you can send.</small></span></a>
   <a class="svc" href="/gift"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="9" width="18" height="12" rx="1"/><path d="M3 13h18M12 9v12" /><path d="M12 9c-1.5-4-6-4-6-1 0 1.6 2.5 1 6 1zM12 9c1.5-4 6-4 6-1 0 1.6-2.5 1-6 1z"/></svg></span><span><b>Gift voucher</b><small>Send airtime, data or cash to someone.</small></span></a>
 </main>
+<footer class="foot"><span>&copy; 2026 Lumora</span><a href="/help">Help</a><a href="/terms">Terms</a><a href="/privacy">Privacy</a></footer>
 <script type="module">import{mountNav}from"/nav.js";mountNav();</script>
 </body></html>

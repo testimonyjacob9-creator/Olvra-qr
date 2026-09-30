@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light"><head>
+<html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Chat helper – Lumora</title>
+<meta name="robots" content="noindex">
 <meta name="description" content="Pick a voice and get a reply you can send.">
-<link rel="canonical" href="https://lumoral.netlify.app/helper"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<link rel="canonical" href="https://lumoral.netlify.app/helper"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)"><meta name="theme-color" content="#121214" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/app.css">
 <style>
 #gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
@@ -86,7 +88,6 @@
     <textarea id="msgIn" placeholder="Paste or type the message here..."></textarea>
     <button class="btn pri" id="genBtn" style="margin-top:12px;width:100%">Get a reply</button>
     <div id="replies"></div>
-    <div class="notice" id="stubNotice" hidden>Chat helper isn't connected to an AI yet — this is a placeholder reply. Real replies turn on once the API key is added.</div>
   </div>
 </div></div>
 
@@ -115,42 +116,39 @@ document.querySelectorAll('.pcard').forEach(el => {
     current = PERSONAS.find(p => p.slug === el.dataset.slug);
     document.getElementById('pchip').innerHTML = el.querySelector('.pav').outerHTML + '<span>' + current.name + '</span>';
     document.getElementById('replies').innerHTML = '';
-    document.getElementById('stubNotice').hidden = true;
     step1.hidden = true; step2.hidden = false;
   };
 });
 document.getElementById('back').onclick = () => { step2.hidden = true; step1.hidden = false; };
 
-// Stub call — swap this for a real request to your own Netlify function
-// (which then calls the Anthropic API with the persona's system prompt)
-// once an API key is wired in. Keeping the network call server-side
-// keeps the key off the client.
 async function getReplies(persona, message) {
-  // TODO: replace with:
-  // const res = await fetch('/.netlify/functions/chat-helper-reply', {
-  //   method: 'POST',
-  //   headers: {'Content-Type':'application/json'},
-  //   body: JSON.stringify({ persona: persona.slug, message })
-  // });
-  // const data = await res.json();
-  // return data.replies;
-  await new Promise(r => setTimeout(r, 500));
-  return [
-    `[${persona.name} placeholder reply] Once connected, a real ${persona.name.toLowerCase()}-style reply will appear here.`,
-    `[${persona.name} placeholder reply] This is a second option, so you can pick the one that fits.`
-  ];
+  const { auth } = await import('/firebase-init.js');
+  const res = await fetch('/.netlify/functions/chat-helper-reply', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + await auth.currentUser.getIdToken() },
+    body: JSON.stringify({ persona: persona.slug, message })
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
+  return data.replies;
 }
+const esc = t => t.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 document.getElementById('genBtn').onclick = async () => {
   const msg = document.getElementById('msgIn').value.trim();
   if (!msg || !current) return;
-  const btn = document.getElementById('genBtn');
-  btn.disabled = true; btn.textContent = 'Thinking...';
-  const replies = await getReplies(current, msg);
-  document.getElementById('replies').innerHTML = replies.map(r =>
-    `<div class="reply">${r.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}</div>`
-  ).join('');
-  document.getElementById('stubNotice').hidden = false;
+  const btn = document.getElementById('genBtn'), out = document.getElementById('replies');
+  btn.disabled = true; btn.textContent = 'Thinking...'; out.innerHTML = '';
+  try {
+    const replies = await getReplies(current, msg);
+    out.innerHTML = replies.map((r, i) =>
+      `<div class="reply"><div>${esc(r)}</div><button type="button" class="btn copy" data-i="${i}" style="margin-top:10px;padding:8px 14px">Copy</button></div>`).join('');
+    out.querySelectorAll('.copy').forEach(b => b.onclick = async () => {
+      try { await navigator.clipboard.writeText(replies[+b.dataset.i]); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1500); } catch (e) {}
+    });
+  } catch (e) {
+    out.innerHTML = `<div class="notice" role="alert">${esc(e.message)}</div>`;
+  }
   btn.disabled = false; btn.textContent = 'Get a reply';
 };
 </script>
