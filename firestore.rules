@@ -32,6 +32,19 @@ service cloud.firestore {
 
       // Notifications: the owner can read their own and mark them read.
       // Only server functions (via notifyUser) create them.
+      // AI Personas conversations: the owner can read (and list) their own;
+      // only persona-chat (admin SDK) creates or deletes them.
+      match /conversations/{cid} {
+        allow read: if request.auth != null && request.auth.uid == uid
+          && get(/databases/$(database)/documents/users/$(uid)).data.get('suspended', false) != true;
+        allow write: if false;
+        match /messages/{mid} {
+          allow read: if request.auth != null && request.auth.uid == uid
+            && get(/databases/$(database)/documents/users/$(uid)).data.get('suspended', false) != true;
+          allow write: if false;
+        }
+      }
+
       match /notifications/{nid} {
         allow read: if request.auth != null && request.auth.uid == uid;
         allow update: if request.auth != null && request.auth.uid == uid
@@ -73,6 +86,8 @@ service cloud.firestore {
     match /authCodes/{docId} {
       allow read, write: if false;
     }
+
+    // AI usage counters (aiUsage/{uid}_{day}): server only, denied to clients by the catch-all below.
 
     // Gift vouchers: server only, in every direction. Creation goes through
     // create-gift.js (payment re-verified with Flutterwave first), lookup
