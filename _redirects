@@ -5,3 +5,4 @@
 /helper    /helper.html  200
 /g/*      /gift.html  200
 /gift     /send-gift.html  200!
+/personas  /personas.html  200
