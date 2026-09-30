@@ -4,7 +4,7 @@
 const { IMAGE_TYPES } = require("./limits");
 
 const E = (statusCode, message, code) => Object.assign(new Error(message), { statusCode, code });
-const MODEL = () => process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const MODEL = () => process.env.GEMINI_MODEL || "gemini-3.5-flash-lite";
 const TIMEOUT_MS = 24000;
 
 // "data:image/jpeg;base64,...." -> { type, data } or null
@@ -47,6 +47,7 @@ async function generate({ system, contents, maxOutputTokens, temperature = 0.9 }
   const model = MODEL();
   const generationConfig = { maxOutputTokens, temperature };
   // 2.5 Flash "thinking" tokens count against maxOutputTokens; turn them off for fast, cheap chat.
+  // Gemini 3.x models (incl. 3.5 Flash-Lite) use thinkingLevel instead and default to minimal, so nothing is sent for them.
   const tb = process.env.GEMINI_THINKING_BUDGET;
   if (tb !== undefined && tb !== "") generationConfig.thinkingConfig = { thinkingBudget: Number(tb) };
   else if (/2\.5-flash/.test(model)) generationConfig.thinkingConfig = { thinkingBudget: 0 };
@@ -68,11 +69,19 @@ async function generate({ system, contents, maxOutputTokens, temperature = 0.9 }
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    console.error("Gemini API", res.status, detail.slice(0, 500)); // logged server-side only
-    if (res.status === 429) throw E(429, "The AI is busy right now. Please try again in a minute.", "AI_BUSY");
-    if (res.status === 400 && /image|inline|mime/i.test(detail)) throw E(422, "I couldn't read that image. Try a clearer screenshot or a JPG/PNG.", "BAD_IMAGE");
-    if (res.status === 401 || res.status === 403 || res.status === 404) throw E(503, "AI Personas are temporarily unavailable. Please try again later.", "AI_CONFIG");
-    throw E(502, "Couldn't get a reply right now. Please try again.", "AI_ERROR");
+    let gStatus = "", gMsg = detail.slice(0, 300);
+    try { const j = JSON.parse(detail); gStatus = (j.error && j.error.status) || ""; gMsg = (j.error && j.error.message) || gMsg; } catch {}
+    // Logged server-side only (Netlify function logs). Google's error text never contains the key.
+    console.error("Gemini API", res.status, gStatus, "model=" + model, String(gMsg).slice(0, 300));
+    // Set PERSONAS_DEBUG=1 in Netlify to show Google's real error in the chat while debugging. Leave unset normally.
+    const dbg = process.env.PERSONAS_DEBUG === "1" ? ` [Gemini ${res.status} ${gStatus}: ${String(gMsg).slice(0, 200)}]` : "";
+    const down = "AI Personas are temporarily unavailable. Please try again later." + dbg;
+    if (res.status === 429) throw E(429, "The AI is busy right now. Please try again in a minute." + dbg, "AI_BUSY");
+    // Google answers a bad or expired API key with 400 "API key not valid", so check that before the image rule.
+    if (res.status === 401 || res.status === 403 || (res.status === 400 && /api key/i.test(gMsg))) throw E(503, down, "AI_AUTH");
+    if (res.status === 404) throw E(503, down, "AI_MODEL");
+    if (res.status === 400 && /image|inline|mime/i.test(detail)) throw E(422, "I couldn't read that image. Try a clearer screenshot or a JPG/PNG." + dbg, "BAD_IMAGE");
+    throw E(502, "Couldn't get a reply right now. Please try again." + dbg, "AI_ERROR");
   }
   const data = await res.json().catch(() => ({}));
   const cand = data.candidates && data.candidates[0];
