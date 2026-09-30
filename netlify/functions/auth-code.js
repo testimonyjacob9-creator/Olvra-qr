@@ -85,7 +85,14 @@ exports.handler = async (event) => {
 
       if (action === "send-verify") {
         const verifyRef = db.collection("authCodes").doc("verify_" + decoded.uid);
-        if (justSent(await verifyRef.get())) return out(200, { emailSent: true, maskedEmail: mask(email) });
+        const existing = await verifyRef.get();
+        // Automatic send on page load (body.auto): never replace a code that is
+        // still valid, e.g. when the person comes back from their email app and
+        // the page reloads. Only an explicit Resend tap issues a fresh code.
+        if (body.auto && existing.exists && Date.now() < (existing.data().expires_at || 0)) {
+          return out(200, { emailSent: true, existing: true, createdAt: existing.data().created_at || 0, maskedEmail: mask(email) });
+        }
+        if (justSent(existing)) return out(200, { emailSent: true, maskedEmail: mask(email) });
         const code = genCode();
         await verifyRef.set({ code_hash: hash(code), created_at: Date.now(), expires_at: Date.now() + TTL_MS });
         const { subject, html } = verifyCodeEmail({ name: decoded.name, code });

@@ -198,14 +198,17 @@ $('#rconfirm').onclick=async()=>{
 
 // ---- email verification ----
 let verifySent=false;
-async function sendVerify(){
+async function sendVerify(auto){
   const u=auth.currentUser;if(!u)return;
-  const {ok,d}=await post({action:'send-verify'},await u.getIdToken());
-  if(ok&&d.emailSent!==false)store.set(VKEY(u.uid),{masked:d.maskedEmail||''});
-  $('#vmsg').textContent=ok?('Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.'):(d.error||'Could not send the code.');
+  const {ok,d}=await post({action:'send-verify',auto:auto===true},await u.getIdToken());
+  if(ok&&d.emailSent!==false)store.set(VKEY(u.uid),{masked:d.maskedEmail||'',...(d.createdAt?{at:d.createdAt}:{})});
+  if(!ok){$('#vmsg').textContent=d.error||'Could not send the code.';return}
+  $('#vmsg').textContent=d.existing
+    ?'A code was already sent to '+(d.maskedEmail||'your email')+'. Check your inbox. It expires in about '+minsLeft({at:d.createdAt||Date.now()})+' min. Tap Resend if you need a new one.'
+    :'Code sent to '+(d.maskedEmail||'your email')+'. It expires in 10 minutes.';
 }
 const VKEY=uid=>'lumora_verify_state_'+uid;
-$('#vresend').onclick=sendVerify;
+$('#vresend').onclick=()=>sendVerify(false);
 $('#vskip').onclick=()=>finish();
 $('#vconfirm').onclick=async()=>{
   err();const u=auth.currentUser,code=$('#vcode').value.trim();if(!u||!code)return;
@@ -237,9 +240,7 @@ onAuthStateChanged(auth,u=>{
       verifySent=true;
       // Returning from the email app? A code was already sent, so don't send
       // another one (that would invalidate the one sitting in their inbox).
-      const prev=store.get(VKEY(u.uid));
-      if(prev)$('#vmsg').textContent='Code sent to '+(prev.masked||'your email')+'. It expires in about '+minsLeft(prev)+' min. Tap Resend if you need a new one.';
-      else sendVerify();
+      sendVerify(true);
     }
     return;
   }
