@@ -2,7 +2,7 @@
 // System prompts never leave the server; the browser gets publicView() only.
 // To add a persona: append one object to PERSONAS. Nothing else needs to change.
 //
-// accessLevel: "free" | "standard" | "premium" (see limits.js for how each is sold)
+// accessLevel: "free" | "premium" (tiers are defined in limits.js)
 // avatar: rendered by CSS (emoji on a gradient), no image files needed. Swap for
 //         an image URL later by adding `image: "/personas/jane.jpg"`.
 const { BADGE, canAccess } = require("./limits");
@@ -52,7 +52,7 @@ const PERSONAS = [
     greetings: ["Well, look who showed up. What are we talking about?", "I'm here, I'm caffeinated (spiritually). Go.", "Entertain me or let me entertain you?"],
   },
   {
-    id: "storyteller", name: "The Storyteller", title: "Stories and roleplay", category: "Creative", accessLevel: "standard",
+    id: "storyteller", name: "The Storyteller", title: "Stories and roleplay", category: "Creative", accessLevel: "premium",
     description: "Builds stories with you and plays characters in creative roleplay.",
     avatar: { emoji: "📖", from: "#a18cd1", to: "#fbc2eb" },
     traits: ["imaginative", "vivid", "adaptive"],
@@ -63,7 +63,7 @@ const PERSONAS = [
     greetings: ["Once upon a time... or shall we start somewhere stranger?", "Give me a genre and a first line, and I'll take it from there.", "Who are we tonight: hero, villain, or something in between?"],
   },
   {
-    id: "coach", name: "The Life Coach", title: "Goals and accountability", category: "Growth", accessLevel: "standard",
+    id: "coach", name: "The Life Coach", title: "Goals and accountability", category: "Growth", accessLevel: "premium",
     description: "Helps you set goals, make plans and stay accountable.",
     avatar: { emoji: "🎯", from: "#43e97b", to: "#38f9d7" },
     traits: ["motivating", "reflective", "practical"],
@@ -74,7 +74,7 @@ const PERSONAS = [
     greetings: ["What's one thing you want to move forward this week?", "Let's turn a goal into a plan. What are you aiming for?", "How did things go since last time?"],
   },
   {
-    id: "debater", name: "The Debater", title: "Test your reasoning", category: "Thinking", accessLevel: "standard",
+    id: "debater", name: "The Debater", title: "Test your reasoning", category: "Thinking", accessLevel: "premium",
     description: "Challenges your arguments and explores the other side.",
     avatar: { emoji: "⚖️", from: "#667eea", to: "#764ba2" },
     traits: ["logical", "challenging", "fair"],
@@ -85,7 +85,7 @@ const PERSONAS = [
     greetings: ["Pick a claim and I'll push back. Fair warning: politely.", "What do you believe that you'd like stress-tested?", "Give me your argument and I'll find the cracks."],
   },
   {
-    id: "muse", name: "The Muse", title: "Ideas and words", category: "Creative", accessLevel: "standard",
+    id: "muse", name: "The Muse", title: "Ideas and words", category: "Creative", accessLevel: "premium",
     description: "Creative writing, captions, poems, brainstorming and better wording.",
     avatar: { emoji: "✨", from: "#f093fb", to: "#f5576c" },
     traits: ["creative", "fresh", "expressive"],

@@ -1,21 +1,19 @@
 // Central access + usage configuration for Lumora AI Personas.
 // Change numbers here only. Nothing else in the codebase hardcodes limits.
 
-// Higher rank = more access. "standard" exists so a Standard plan can be added
-// later: make tierOf() return "standard" for those subscribers, add their limits
-// below, and change BADGE.standard to "STANDARD". No persona code changes needed.
-const TIER_RANK = { free: 0, standard: 1, premium: 2 };
+// Two access tiers only: free and premium. Higher rank = more access.
+// To add a tier later (e.g. "standard"): add it to TIER_RANK, BADGE and LIMITS,
+// make tierOf() return it, and set accessLevel on the personas that need it.
+const TIER_RANK = { free: 0, premium: 1 };
 
-// What the UI shows for each persona access level. Until a Standard plan
-// exists, "standard" personas are sold as Premium.
-const BADGE = { free: "FREE", standard: "PREMIUM", premium: "PREMIUM" };
+// Badge text the UI shows for each persona accessLevel.
+const BADGE = { free: "FREE", premium: "PREMIUM" };
 
 // Day boundary for daily limits. 1 = resets at midnight West Africa Time (UTC+1).
 const RESET_UTC_OFFSET_HOURS = 1;
 
 const LIMITS = {
   free:     { dailyMessages: 15,  dailyImages: 3,  perMinute: 5,  historyMessages: 10, maxInputChars: 1500, maxOutputTokens: 500, maxImageChars: 2000000 },
-  standard: { dailyMessages: 60,  dailyImages: 10, perMinute: 8,  historyMessages: 12, maxInputChars: 2000, maxOutputTokens: 700, maxImageChars: 2000000 },
   premium:  { dailyMessages: 150, dailyImages: 25, perMinute: 12, historyMessages: 16, maxInputChars: 3000, maxOutputTokens: 900, maxImageChars: 2500000 },
 };
 
