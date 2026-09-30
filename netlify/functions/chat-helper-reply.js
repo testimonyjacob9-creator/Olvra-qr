@@ -22,18 +22,30 @@ const MODEL = process.env.HELPER_MODEL || "claude-haiku-4-5-20251001";
 const err = (statusCode, message) => Object.assign(new Error(message), { statusCode });
 const BASE = "You are Lumora's Chat helper: a warm, sharp assistant that helps people with texting, dating, friendships, family and hard conversations. Talk like a friend in a normal chat: natural, concise (under 120 words unless asked for more), no headings, no bullet lists. " +
   "When the user shares a message they received or asks what to say, give one to three ready-to-send replies. Put each sendable reply on its own line starting with '> ' (and nothing else on that line), with at most a sentence or two of context around them. " +
-  "Stay honest and respectful: never help harass, threaten, manipulate or deceive someone; steer toward clear, kind communication instead. If someone seems in danger or in crisis, respond with care and encourage them to reach a trusted person or local emergency help. Your voice: ";
+  "Stay honest and respectful: never help harass, threaten, manipulate or deceive someone; steer toward clear, kind communication instead. If the user shares a screenshot of a conversation, read it carefully, focus on the most recent messages from the other person, and answer as you would for pasted text. If someone seems in danger or in crisis, respond with care and encourage them to reach a trusted person or local emergency help. Your voice: ";
+
+const TYPES = ["image/jpeg", "image/png", "image/webp"];
+function parseImage(v) {
+  if (typeof v !== "string" || v.length > 2500000 || !v.startsWith("data:")) return null;
+  const i = v.indexOf(";base64,");
+  if (i < 0) return null;
+  const type = v.slice(5, i), data = v.slice(i + 8);
+  return TYPES.includes(type) && /^[A-Za-z0-9+/=]+$/.test(data) ? { type, data } : null;
+}
 
 function clean(list) {
   const out = [];
   for (const m of (Array.isArray(list) ? list : []).slice(-20)) {
     const role = m && m.role === "assistant" ? "assistant" : m && m.role === "user" ? "user" : null;
     const content = String((m && m.content) || "").trim().slice(0, 2000);
-    if (!role || !content) continue;
-    if (out.length && out[out.length - 1].role === role) out[out.length - 1].content += "\n" + content;
-    else out.push({ role, content });
+    const image = role === "user" ? parseImage(m.image) : null;
+    if (!role || (!content && !image)) continue;
+    const last = out[out.length - 1];
+    if (last && last.role === role) { last.content = (last.content + "\n" + content).trim(); last.image = image || last.image; }
+    else out.push({ role, content, image });
   }
   while (out.length && out[0].role !== "user") out.shift();
+  out.forEach((m, i) => { if (i < out.length - 1) m.image = null; }); // only the newest message keeps its image
   return out;
 }
 
@@ -50,10 +62,14 @@ exports.handler = async (event) => {
     const key = process.env.ANTHROPIC_API_KEY;
     if (!key) throw err(503, "Chat helper is temporarily unavailable. Please try again later.");
 
+    const apiMessages = messages.map((m) => m.image
+      ? { role: m.role, content: [{ type: "image", source: { type: "base64", media_type: m.image.type, data: m.image.data } }, { type: "text", text: m.content || "Here is a screenshot of my chat." }] }
+      : { role: m.role, content: m.content });
+
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
-      body: JSON.stringify({ model: MODEL, max_tokens: 500, system: BASE + persona, messages }),
+      body: JSON.stringify({ model: MODEL, max_tokens: 500, system: BASE + persona, messages: apiMessages }),
     });
     if (!res.ok) { console.error("Anthropic API", res.status, await res.text().catch(() => "")); throw err(502, "Couldn't get a reply right now. Please try again."); }
     const data = await res.json();
