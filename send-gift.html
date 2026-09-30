@@ -14,6 +14,7 @@
 label{display:block;margin:16px 0 6px;font-weight:700;font-size:.85rem}
 .amts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
 .amts button{flex:1;min-width:76px}
+.amt.on{border-color:var(--accent) !important;color:var(--accent)}
 textarea{width:100%;min-height:90px;resize:vertical}
 .done{padding:20px;border-radius:14px;text-align:center}
 .done input{text-align:center;font-weight:700;margin-top:10px}
@@ -30,19 +31,20 @@ textarea{width:100%;min-height:90px;resize:vertical}
   <div id="form">
     <label>Amount (₦)</label>
     <div class="amts">
+      <button class="btn amt" data-a="100">100</button>
       <button class="btn amt" data-a="500">500</button>
       <button class="btn amt" data-a="1000">1,000</button>
       <button class="btn amt" data-a="2000">2,000</button>
       <button class="btn amt" data-a="5000">5,000</button>
     </div>
-    <input id="amt" type="number" min="500" step="50" placeholder="Or enter an amount">
+    <input id="amt" type="number" inputmode="numeric" min="100" step="1" placeholder="Or enter any amount (minimum ₦100)">
 
     <label>Message</label>
     <textarea id="msg" placeholder="Write something..." maxlength="500"></textarea>
 
     <button class="btn pri" id="pay" style="width:100%;margin-top:18px">Pay and get link</button>
     <p class="sub" id="err" role="alert" style="margin-top:10px"></p>
-    <p class="sub" style="margin-top:14px">Unredeemed gifts are refunded to you after 90 days.</p>
+    <p class="sub" style="margin-top:14px">Minimum gift is ₦100. Gifts not redeemed within 7 days are refunded to you.</p>
   </div>
 
   <div id="doneBox" class="glass done" hidden>
@@ -63,14 +65,16 @@ const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X';
 const $=s=>document.querySelector(s);
 const err=(m)=>{$('#err').textContent=m||''};
 
-document.querySelectorAll('.amt').forEach(b=>b.onclick=()=>{$('#amt').value=b.dataset.a});
+const pick=v=>document.querySelectorAll('.amt').forEach(x=>x.classList.toggle('on',x.dataset.a===String(v)));
+document.querySelectorAll('.amt').forEach(b=>b.onclick=()=>{$('#amt').value=b.dataset.a;pick(b.dataset.a)});
+$('#amt').addEventListener('input',e=>pick(e.target.value));
 
 $('#pay').onclick=()=>{
   err();
   const u=auth.currentUser;
   const amount=Number($('#amt').value);
   const message=$('#msg').value.trim();
-  if(!(amount>=500)){err('Minimum gift is ₦500.');return}
+  if(!Number.isInteger(amount)||amount<100){err(amount>=100?'Enter a whole number of naira.':'Minimum gift is ₦100.');return}
   const txRef='OQG-'+u.uid.slice(0,8)+'-'+Date.now();
   FlutterwaveCheckout({
     public_key:FLW_PUBLIC_KEY, tx_ref:txRef, amount, currency:'NGN',

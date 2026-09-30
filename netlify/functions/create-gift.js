@@ -3,7 +3,7 @@
 // Body: { transactionId, txRef, amount, message, animation }
 // Re-verifies the payment with Flutterwave (never trusts the browser),
 // then creates a NGN cash voucher. Amount is what the recipient can
-// redeem — WoodPay's minimum payout is ₦500, so gifts start there too.
+// redeem — any whole-naira amount from ₦100 up.
 const admin = require("firebase-admin");
 const crypto = require("crypto");
 
@@ -15,7 +15,8 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 const out = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-const MIN_GIFT = 500; // matches WoodPay's own withdrawal minimum
+const MIN_GIFT = 100;
+const EXPIRY_DAYS = 7; // unredeemed gifts expire (and are due a refund) after this long
 
 function makeCode() {
   return crypto.randomBytes(9).toString("base64url"); // ~12 chars, URL-safe
@@ -31,7 +32,7 @@ exports.handler = async (event) => {
 
     const { transactionId, txRef, amount, message, animation } = JSON.parse(event.body || "{}");
     const amt = Number(amount);
-    if (!transactionId || !txRef || !(amt >= MIN_GIFT)) return out(400, { error: `Missing payment details, or amount below the ₦${MIN_GIFT} minimum.` });
+    if (!transactionId || !txRef || !Number.isInteger(amt) || amt < MIN_GIFT) return out(400, { error: `Missing payment details, or amount below the ₦${MIN_GIFT} minimum.` });
     if (!String(txRef).startsWith("OQG-" + user.uid.slice(0, 8) + "-")) return out(400, { error: "Payment does not belong to this account." });
 
     const r = await fetch(`https://api.flutterwave.com/v3/transactions/${encodeURIComponent(transactionId)}/verify`, {
@@ -53,7 +54,7 @@ exports.handler = async (event) => {
 
     const code = makeCode();
     const voucherRef = db.collection("vouchers").doc(code);
-    const expiresAt = new Date(Date.now() + 90 * 86400000); // 90 days
+    const expiresAt = new Date(Date.now() + EXPIRY_DAYS * 86400000);
 
     await db.runTransaction(async (t) => {
       t.set(payRef, { uid: user.uid, txRef, amount: tx.amount, currency: tx.currency, purpose: "gift", voucherCode: code, at: admin.firestore.FieldValue.serverTimestamp() });
