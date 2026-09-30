@@ -10,146 +10,165 @@
 <style>
 #gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
 #gateScreen .card{max-width:320px;padding:30px 26px}
-.plist{display:grid;gap:10px;margin-top:16px}
-.pcard{display:flex;gap:12px;align-items:center;text-align:left;width:100%;padding:14px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);cursor:pointer;font:inherit;color:var(--ink)}
-.pcard:active{transform:scale(.99)}
-.pcard.sel{border-color:var(--accent);outline:2px solid var(--accent)}
-.pav{flex:none;width:44px;height:44px;border-radius:50%;overflow:hidden}
-.pav svg{width:100%;height:100%;display:block}
-.pinfo b{display:block;font-size:.95rem}.pinfo small{display:block;color:var(--dim);margin-top:2px;font-size:.82rem}
-#step2{margin-top:22px}
-#step2 textarea{width:100%;min-height:110px;resize:vertical}
-#back{background:none;border:0;color:var(--dim);font-weight:700;padding:0;margin-bottom:10px;cursor:pointer}
-.pchip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:20px;background:var(--bg-2);border:1px solid var(--line);font-weight:700;font-size:.85rem;margin-bottom:14px}
-.pchip .pav{width:24px;height:24px}
-#replies{display:grid;gap:10px;margin-top:16px}
-.reply{padding:14px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);font-size:.92rem;line-height:1.5}
-.notice{background:var(--bg-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--dim);font-size:.85rem;margin-top:14px}
+body{padding-bottom:0 !important}
+.hc{max-width:720px;margin:0 auto;display:flex;flex-direction:column;height:calc(100dvh - 152px - env(safe-area-inset-bottom))}
+.vbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:4px 16px 10px}
+.vbar h1{font-size:1.2rem;margin:0}
+.vr{display:flex;gap:8px;align-items:center}
+.vchip{display:flex;align-items:center;gap:8px;padding:5px 10px 5px 5px;border-radius:99px;background:var(--bg-2) !important;border:1px solid var(--line) !important;color:var(--ink);font:inherit;font-weight:700;font-size:.85rem;cursor:pointer}
+.ib{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:var(--bg-2) !important;border:1px solid var(--line) !important;color:var(--ink);cursor:pointer;padding:0}
+.av{flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:800;width:28px;height:28px;font-size:.62rem;letter-spacing:.02em}
+.av.lg{width:64px;height:64px;font-size:1.1rem}
+.log{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:8px 16px 14px;display:flex;flex-direction:column;gap:10px}
+.m{max-width:88%;padding:11px 14px;border-radius:18px;line-height:1.5;font-size:.95rem;overflow-wrap:anywhere;animation:pop .18s ease-out}
+.m p{margin:0}.m p+p,.m p+.rc,.rc+p{margin-top:8px}
+.m.me{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:6px;white-space:pre-wrap}
+.m.ai{align-self:flex-start;background:var(--bg-2);border:1px solid var(--line);border-bottom-left-radius:6px}
+.m.err{border-color:#e11d48;color:#e11d48}
+.rc{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;padding:10px 10px 10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);border-left:3px solid var(--accent);margin-top:8px}
+.rc span{flex:1;white-space:pre-wrap}
+.cp{flex:none;display:flex;align-items:center;gap:4px;border:0;background:none;color:var(--accent);font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;padding:2px 4px}
+.note{align-self:center;color:var(--dim);font-size:.78rem;padding:2px 10px}
+.typing{display:flex;gap:5px;padding:14px 16px}
+.typing i{width:7px;height:7px;border-radius:50%;background:var(--dim);animation:bl 1.1s infinite ease-in-out}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+.empty{margin:auto;text-align:center;padding:10px 12px;max-width:340px}
+.empty h2{font-size:1.25rem;margin:14px 0 4px}.empty p{color:var(--dim);margin:0 0 16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.chips button{padding:9px 14px;border-radius:99px;background:var(--bg-2) !important;border:1px solid var(--line) !important;color:var(--ink);font:inherit;font-size:.85rem;font-weight:600;cursor:pointer}
+.comp{display:flex;gap:8px;align-items:flex-end;padding:10px 14px 12px;border-top:1px solid var(--line);background:var(--bg)}
+.comp textarea{flex:1;min-height:44px;max-height:120px;resize:none;border-radius:22px !important;padding:11px 16px !important;line-height:1.4;margin:0}
+.send{flex:none;width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+.send:disabled{opacity:.4;cursor:default}
+#vsheet{position:fixed;inset:0;z-index:1000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.5)}
+#vsheet .box{width:100%;max-width:520px;max-height:82dvh;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:20px 20px 0 0;padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+#vsheet h3{margin:2px 6px 12px;font-size:1.05rem}
+.vo{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:11px 10px;border-radius:14px;background:none;border:1px solid transparent;color:var(--ink);font:inherit;cursor:pointer}
+.vo.on{background:var(--bg-2);border-color:var(--accent)}
+.vo .av{width:42px;height:42px;font-size:.8rem}
+.vo b{display:block}.vo small{color:var(--dim);display:block;font-size:.8rem;line-height:1.35}
+@media(prefers-reduced-motion:reduce){.m,.typing i{animation:none}}
 </style>
-<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script></head><body>
+</head><body>
 <div id="gateScreen" hidden><div class="glass card">
   <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to use Chat helper</p>
   <p class="sub" style="margin-bottom:20px">Create a free Lumora account. It only takes a moment.</p>
   <a class="btn pri" id="gateLink" href="/login?next=/helper">Sign in or create account</a>
 </div></div>
-<div id="gatedApp" hidden><div class="wrap">
-  <h1>Chat helper</h1>
-  <p class="sub">Pick a voice, then paste the message you're replying to.</p>
-
-  <div id="step1">
-    <div class="plist">
-  <button class="pcard" data-slug="nonchalant" data-name="Nonchalant">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#6b6f7a"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">N</text></svg></span>
-    <span class="pinfo"><b>Nonchalant</b><small>Cool, short replies that don't try too hard.</small></span>
-  </button>
-  <button class="pcard" data-slug="observer" data-name="The Observer">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#2b3cff"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">O</text></svg></span>
-    <span class="pinfo"><b>The Observer</b><small>Spots what doesn't add up and tells you what to ask.</small></span>
-  </button>
-  <button class="pcard" data-slug="confident" data-name="Confident">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#0f766e"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">C</text></svg></span>
-    <span class="pinfo"><b>Confident</b><small>Calm and self-assured, never desperate.</small></span>
-  </button>
-  <button class="pcard" data-slug="charming" data-name="Charming">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#d61f69"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">C</text></svg></span>
-    <span class="pinfo"><b>Charming</b><small>Warm, smooth and a little flirty.</small></span>
-  </button>
-  <button class="pcard" data-slug="funny" data-name="Funny">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#f59e0b"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">F</text></svg></span>
-    <span class="pinfo"><b>Funny</b><small>Playful replies and jokes that keep the chat light.</small></span>
-  </button>
-  <button class="pcard" data-slug="straight" data-name="Straight Talker">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#334155"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">ST</text></svg></span>
-    <span class="pinfo"><b>Straight Talker</b><small>Clear and honest, no games.</small></span>
-  </button>
-  <button class="pcard" data-slug="romantic" data-name="Romantic">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#e11d48"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">R</text></svg></span>
-    <span class="pinfo"><b>Romantic</b><small>Sweet and heartfelt.</small></span>
-  </button>
-  <button class="pcard" data-slug="peacemaker" data-name="Peacemaker">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#059669"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">P</text></svg></span>
-    <span class="pinfo"><b>Peacemaker</b><small>Calms arguments and helps you say sorry the right way.</small></span>
-  </button>
-  <button class="pcard" data-slug="boundary" data-name="Boundary Setter">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#7c3aed"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">BS</text></svg></span>
-    <span class="pinfo"><b>Boundary Setter</b><small>Politely says no and stands firm without a fight.</small></span>
-  </button>
-  <button class="pcard" data-slug="confrontation" data-name="The Confrontation Coach">
-    <span class="pav"><svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="24" fill="#b91c1c"/><text x="24" y="30" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="800" font-size="17" fill="#fff">CC</text></svg></span>
-    <span class="pinfo"><b>The Confrontation Coach</b><small>A roleplay partner who deflects, so you can practise a hard talk.</small></span>
-  </button>
+<div id="gatedApp" hidden><div class="hc">
+  <div class="vbar">
+    <h1>Chat helper</h1>
+    <div class="vr">
+      <button class="vchip" id="vchip" type="button" aria-label="Change voice"></button>
+      <button class="ib" id="newchat" type="button" aria-label="New chat"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
     </div>
   </div>
-
-  <div id="step2" hidden>
-    <button id="back">&larr; Change voice</button>
-    <div class="pchip" id="pchip"></div>
-    <label class="sub" for="msgIn" style="display:block;margin-bottom:6px">Their message (or what happened)</label>
-    <textarea id="msgIn" placeholder="Paste or type the message here..."></textarea>
-    <button class="btn pri" id="genBtn" style="margin-top:12px;width:100%">Get a reply</button>
-    <div id="replies"></div>
-  </div>
+  <div class="log" id="log" role="log" aria-live="polite"></div>
+  <form class="comp" id="comp" autocomplete="off">
+    <textarea id="inp" rows="1" maxlength="2000" placeholder="Paste a message or ask anything..." aria-label="Message"></textarea>
+    <button class="send" id="send" type="submit" aria-label="Send" disabled><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+  </form>
 </div></div>
-
 <script type="module">
 import {requireAuth} from '/gate.js';
 import {mountNav} from '/nav.js';
+import {auth} from '/firebase-init.js';
 mountNav();requireAuth();
 
-const PERSONAS = [
-  {slug:"nonchalant",name:"Nonchalant"},
-  {slug:"observer",name:"The Observer"},
-  {slug:"confident",name:"Confident"},
-  {slug:"charming",name:"Charming"},
-  {slug:"funny",name:"Funny"},
-  {slug:"straight",name:"Straight Talker"},
-  {slug:"romantic",name:"Romantic"},
-  {slug:"peacemaker",name:"Peacemaker"},
-  {slug:"boundary",name:"Boundary Setter"},
-  {slug:"confrontation",name:"The Confrontation Coach"},
+const P=[
+ {s:'confident',n:'Confident',i:'C',c:'#0f766e',d:'Calm and self-assured, never desperate.'},
+ {s:'charming',n:'Charming',i:'C',c:'#d61f69',d:'Warm, smooth and a little flirty.'},
+ {s:'funny',n:'Funny',i:'F',c:'#f59e0b',d:'Playful replies and jokes that keep the chat light.'},
+ {s:'romantic',n:'Romantic',i:'R',c:'#e11d48',d:'Sweet and heartfelt.'},
+ {s:'nonchalant',n:'Nonchalant',i:'N',c:'#6b6f7a',d:"Cool, short replies that don't try too hard."},
+ {s:'straight',n:'Straight Talker',i:'ST',c:'#334155',d:'Clear and honest, no games.'},
+ {s:'observer',n:'The Observer',i:'O',c:'#2b3cff',d:"Spots what doesn't add up and tells you what to ask."},
+ {s:'peacemaker',n:'Peacemaker',i:'P',c:'#059669',d:'Calms arguments and helps you say sorry the right way.'},
+ {s:'boundary',n:'Boundary Setter',i:'BS',c:'#7c3aed',d:'Politely says no and stands firm without a fight.'},
+ {s:'confrontation',n:'The Confrontation Coach',i:'CC',c:'#b91c1c',d:'A roleplay partner who deflects, so you can practise a hard talk.'},
 ];
-const step1 = document.getElementById('step1'), step2 = document.getElementById('step2');
-let current = null;
+const $=s=>document.querySelector(s), log=$('#log'), inp=$('#inp'), sendBtn=$('#send');
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const esc=t=>t.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const av=(p,cls='')=>`<span class="av ${cls}" style="background:${p.c}" aria-hidden="true">${p.i}</span>`;
+const COPY='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 012-2h9"/></svg>';
+let voice=P.find(p=>p.s===ls.get('lumora_voice'))||P[0], msgs=[], busy=false;
+try{msgs=JSON.parse(ls.get('lumora_helper_chat')||'[]').filter(m=>m&&m.content)}catch(e){}
+const save=()=>ls.set('lumora_helper_chat',JSON.stringify(msgs.slice(-40)));
 
-document.querySelectorAll('.pcard').forEach(el => {
-  el.onclick = () => {
-    current = PERSONAS.find(p => p.slug === el.dataset.slug);
-    document.getElementById('pchip').innerHTML = el.querySelector('.pav').outerHTML + '<span>' + current.name + '</span>';
-    document.getElementById('replies').innerHTML = '';
-    step1.hidden = true; step2.hidden = false;
-  };
-});
-document.getElementById('back').onclick = () => { step2.hidden = true; step1.hidden = false; };
-
-async function getReplies(persona, message) {
-  const { auth } = await import('/firebase-init.js');
-  const res = await fetch('/.netlify/functions/chat-helper-reply', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', Authorization: 'Bearer ' + await auth.currentUser.getIdToken() },
-    body: JSON.stringify({ persona: persona.slug, message })
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-  return data.replies;
-}
-const esc = t => t.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-
-document.getElementById('genBtn').onclick = async () => {
-  const msg = document.getElementById('msgIn').value.trim();
-  if (!msg || !current) return;
-  const btn = document.getElementById('genBtn'), out = document.getElementById('replies');
-  btn.disabled = true; btn.textContent = 'Thinking...'; out.innerHTML = '';
-  try {
-    const replies = await getReplies(current, msg);
-    out.innerHTML = replies.map((r, i) =>
-      `<div class="reply"><div>${esc(r)}</div><button type="button" class="btn copy" data-i="${i}" style="margin-top:10px;padding:8px 14px">Copy</button></div>`).join('');
-    out.querySelectorAll('.copy').forEach(b => b.onclick = async () => {
-      try { await navigator.clipboard.writeText(replies[+b.dataset.i]); b.textContent = 'Copied'; setTimeout(() => b.textContent = 'Copy', 1500); } catch (e) {}
-    });
-  } catch (e) {
-    out.innerHTML = `<div class="notice" role="alert">${esc(e.message)}</div>`;
+function ai(text){ // "> " lines become ready-to-send reply cards with a copy button
+  let html='',para=[];
+  const flush=()=>{if(para.length){html+='<p>'+esc(para.join('\n')).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>')+'</p>';para=[]}};
+  for(const line of text.split('\n')){
+    const m=line.match(/^\s*>\s?(.*)$/);
+    if(m&&m[1].trim()){flush();html+=`<div class="rc"><span>${esc(m[1].trim().replace(/^["“]|["”]$/g,''))}</span><button type="button" class="cp" aria-label="Copy reply">${COPY}Copy</button></div>`}
+    else if(line.trim()) para.push(line.trim()); else flush();
   }
-  btn.disabled = false; btn.textContent = 'Get a reply';
-};
+  flush();return html;
+}
+function bubble(m){
+  const d=document.createElement('div');
+  if(m.role==='user'){d.className='m me';d.textContent=m.content}
+  else{d.className='m ai';d.innerHTML=ai(m.content)}
+  return d;
+}
+function scroll(){log.scrollTop=log.scrollHeight}
+function chip(){$('#vchip').innerHTML=av(voice)+'<span>'+esc(voice.n.replace('The ',''))+'</span><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>'}
+function render(){
+  log.innerHTML='';
+  if(!msgs.length){
+    log.innerHTML=`<div class="empty">${av(voice,'lg')}<h2>Hi, I'm your ${esc(voice.n.replace('The ',''))} helper</h2><p>${esc(voice.d)} Paste a message you got, or tell me what's going on.</p>
+    <div class="chips"><button>Help me reply to a message</button><button>How do I say sorry?</button><button>Say no without a fight</button><button>Practise a hard talk</button></div></div>`;
+    log.querySelectorAll('.chips button').forEach(b=>b.onclick=()=>{inp.value=b.textContent;grow();ask()});
+  }else msgs.forEach(m=>log.append(bubble(m)));
+  scroll();
+}
+log.addEventListener('click',async e=>{
+  const b=e.target.closest('.cp');if(!b)return;
+  try{await navigator.clipboard.writeText(b.previousElementSibling.textContent);const o=b.innerHTML;b.textContent='Copied';setTimeout(()=>b.innerHTML=o,1400)}catch(x){}
+});
+function grow(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,120)+'px';sendBtn.disabled=busy||!inp.value.trim()}
+inp.addEventListener('input',grow);
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&matchMedia('(pointer:fine)').matches){e.preventDefault();ask()}});
+$('#comp').addEventListener('submit',e=>{e.preventDefault();ask()});
+
+async function ask(){
+  const text=inp.value.trim();if(!text||busy)return;
+  busy=true;inp.value='';grow();
+  if(!msgs.length)log.innerHTML='';
+  const um={role:'user',content:text};msgs.push(um);log.append(bubble(um));
+  const t=document.createElement('div');t.className='m ai typing';t.innerHTML='<i></i><i></i><i></i>';log.append(t);scroll();
+  try{
+    const res=await fetch('/.netlify/functions/chat-helper-reply',{method:'POST',
+      headers:{'content-type':'application/json',Authorization:'Bearer '+await auth.currentUser.getIdToken()},
+      body:JSON.stringify({persona:voice.s,messages:msgs.slice(-20)})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||'Something went wrong. Please try again.');
+    const am={role:'assistant',content:data.reply};msgs.push(am);t.replaceWith(bubble(am));save();
+  }catch(e){
+    msgs.pop();inp.value=text;
+    const d=document.createElement('div');d.className='m ai err';d.textContent=e.message;t.replaceWith(d);
+  }
+  busy=false;grow();scroll();inp.focus({preventScroll:true});
+}
+
+function sheet(){
+  const el=document.createElement('div');el.id='vsheet';
+  el.innerHTML=`<div class="box" role="dialog" aria-modal="true" aria-label="Choose a voice"><h3>Choose a voice</h3>`+
+    P.map(p=>`<button class="vo${p.s===voice.s?' on':''}" data-s="${p.s}">${av(p)}<span><b>${esc(p.n)}</b><small>${esc(p.d)}</small></span></button>`).join('')+`</div>`;
+  document.body.append(el);
+  const close=()=>el.remove();
+  el.onclick=e=>{if(e.target===el)close()};
+  el.querySelectorAll('.vo').forEach(b=>b.onclick=()=>{
+    const p=P.find(x=>x.s===b.dataset.s);close();if(p.s===voice.s)return;
+    voice=p;ls.set('lumora_voice',p.s);chip();
+    if(msgs.length){const n=document.createElement('div');n.className='note';n.textContent='Voice changed to '+p.n;log.append(n);scroll()}else render();
+  });
+}
+$('#vchip').onclick=sheet;
+$('#newchat').onclick=()=>{if(busy)return;msgs=[];save();render();inp.focus()};
+chip();render();grow();
 </script>
 </body></html>

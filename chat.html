@@ -25,7 +25,11 @@ h2.sec{font-size:1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px
 /* conversation */
 #conv{position:fixed;inset:0;z-index:70;display:flex;flex-direction:column;height:100dvh;background:var(--bg)}
 .chead{display:flex;align-items:center;gap:10px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
-.chead .who{font-weight:800}
+.chead .who{font-weight:800;flex:1;min-width:0}
+.chead .who #cname{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chead .back,.chead #cav{flex:none}
+.chead .mini{flex:none;padding:8px 12px;background:var(--bg-2) !important}
+.chead #rem{color:#e11d48}
 .back{border:0;background:none;font-size:22px;cursor:pointer;color:var(--ink);padding:4px 8px}
 #msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:6px}
 .m{max-width:78%;padding:9px 13px 6px;border-radius:18px;line-height:1.4}
