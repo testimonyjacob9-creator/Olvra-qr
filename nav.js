@@ -6,6 +6,7 @@ import { auth, db } from "/firebase-init.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, collection, query, where, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { mountThemeToggle } from "/theme.js";
+import { mountInstallButton } from "/install.js";
 
 const ICONS = {
   home: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v9a1 1 0 01-1 1h-4v-6H9v6H5a1 1 0 01-1-1v-9z" stroke-linejoin="round"/></svg>',
@@ -37,6 +38,7 @@ export function mountNav({ showLogo = true } = {}) {
       <div class="appbar-r"><a class="plan-pill free" id="navPlan" href="/account" hidden></a><span id="navTheme"></span><a class="bellbtn" id="navBell" href="/notifications" aria-label="Notifications">🔔<span class="bell-badge" id="navBellBadge"></span></a></div>`;
     document.body.prepend(bar);
     mountThemeToggle(document.getElementById("navTheme"));
+    mountInstallButton(document.getElementById("navTheme"));
   }
 
   const path = location.pathname.replace(/\/$/, "") || "/";
