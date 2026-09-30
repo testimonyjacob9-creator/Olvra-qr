@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
 <title>AI Personas – Lumora</title>
 <meta name="robots" content="noindex">
 <meta name="description" content="Chat with AI personas. Share a screenshot and get their take.">
@@ -32,12 +32,16 @@ h2.sec{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(
 .ib{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:50%;background:var(--bg-2);border:1px solid var(--line);color:var(--ink);cursor:pointer;padding:0}
 .ib.del{border:0;background:none;color:var(--dim)}
 /* chat */
-body.inchat{padding-bottom:0}
+body.inchat{padding-bottom:0;overflow:hidden;overscroll-behavior:none}
+body.inchat.kb .bottom-nav,body.inchat.kb .appbar{display:none}
+body.inchat.kb .ch{padding-top:calc(8px + env(safe-area-inset-top))}
+body.inchat.kb .comp{padding-bottom:8px}
+body.inchat.kb .use{display:none}
 .hc{max-width:720px;margin:0 auto;display:flex;flex-direction:column;height:calc(100dvh - 172px - env(safe-area-inset-bottom))}
 .ch{display:flex;align-items:center;gap:10px;padding:2px 16px 10px;border-bottom:1px solid var(--line)}
 .ch .who{flex:1;min-width:0}.ch .nm{font-weight:800;line-height:1.2}.st{font-size:.76rem;color:var(--dim);display:flex;align-items:center;gap:5px}
 .dot{width:7px;height:7px;border-radius:50%;background:#22c55e}
-.log{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.log{flex:1;min-height:60px;overflow-y:auto;overscroll-behavior:contain;padding:12px 16px;display:flex;flex-direction:column;gap:10px}
 .m{max-width:88%;padding:11px 14px;border-radius:18px;line-height:1.5;font-size:.95rem;overflow-wrap:anywhere;white-space:pre-wrap;animation:pop .18s ease-out}
 .m.me{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:6px}
 .m.ai{align-self:flex-start;background:var(--bg-2);border:1px solid var(--line);border-bottom-left-radius:6px}
@@ -113,6 +117,24 @@ mountNav();requireAuth();
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
 const S={tier:'free',personas:[],limits:null,usage:null,persona:null,convId:null,busy:false,img:null,last:null,uid:null};
 const log=$('#log'),inp=$('#inp'),sendBtn=$('#send');
+/* ---- keep chat inside the visible area: above the on-screen keyboard; bottom nav only shown while the keyboard is closed ---- */
+const vv=window.visualViewport,chatEl=$('#chat');let baseH=0;
+function fit(){
+  if(!S.persona){chatEl.style.height='';document.body.classList.remove('kb');return}
+  const h=vv?vv.height:innerHeight;
+  if(document.activeElement!==inp||h>baseH)baseH=Math.max(baseH,h,innerHeight);
+  const kb=baseH-h>120;
+  document.body.classList.toggle('kb',kb);
+  if(window.scrollY||(vv&&vv.offsetTop))window.scrollTo(0,0);
+  const nav=document.querySelector('.bottom-nav'),navH=!kb&&nav?nav.getBoundingClientRect().height:0;
+  const top=chatEl.getBoundingClientRect().top+window.scrollY;
+  chatEl.style.height=Math.max(220,Math.floor(h-top-navH))+'px';
+  if(kb)log.scrollTop=log.scrollHeight;
+}
+if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit)}
+addEventListener('resize',fit);addEventListener('orientationchange',()=>{baseH=0;setTimeout(fit,300)});
+inp.addEventListener('focus',()=>{setTimeout(fit,120);setTimeout(fit,450)});
+inp.addEventListener('blur',()=>setTimeout(fit,150));
 const LOCK='<svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>';
 
 async function api(body){
@@ -191,7 +213,7 @@ function bubble(role,text,img){
 function greet(){const g=S.persona.greetings;bubble('model',g[Math.floor(Math.random()*g.length)])}
 async function openChat(p,convId){
   S.persona=p;S.convId=convId||null;S.last=null;setImg(null);
-  $('#picker').hidden=true;$('#chat').hidden=false;document.body.classList.add('inchat');window.scrollTo(0,0);
+  $('#picker').hidden=true;$('#chat').hidden=false;document.body.classList.add('inchat');window.scrollTo(0,0);fit();
   const a=$('#cav');a.style.background=`linear-gradient(135deg,${p.avatar.from},${p.avatar.to})`;a.textContent=p.name.replace(/^The /,'')[0];
   $('#cname').textContent=p.name;log.textContent='';inp.value='';grow();usage();
   if(!convId){greet();inp.focus();return}
@@ -201,7 +223,7 @@ async function openChat(p,convId){
   }catch(e){bubble('model','Couldn\u2019t load this conversation.');log.lastChild.className='m err'}
 }
 function goPicker(){
-  $('#chat').hidden=true;$('#picker').hidden=false;document.body.classList.remove('inchat');S.persona=null;S.convId=null;
+  $('#chat').hidden=true;$('#picker').hidden=false;document.body.classList.remove('inchat');S.persona=null;S.convId=null;fit();
   loadRecent();usage();
 }
 $('#back').onclick=goPicker;
