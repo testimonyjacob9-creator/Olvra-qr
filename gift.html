@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>A gift for you – Lumora</title><meta name="robots" content="noindex,nofollow">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="/app.css">
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<style>
+body{display:flex;align-items:center;justify-content:center;padding:24px;min-height:100dvh}
+.card{width:100%;max-width:440px;padding:30px 26px;text-align:center}
+.amt{font-size:2.2rem;font-weight:800;margin:6px 0 10px}
+#msg{white-space:pre-wrap;line-height:1.6;margin-bottom:20px;text-align:left}
+.opts{display:grid;gap:10px;margin-top:6px}
+.opt{display:flex;align-items:center;gap:12px;text-align:left;padding:14px;border-radius:12px;background:var(--bg-2);border:1px solid var(--line);cursor:pointer;font:inherit;color:var(--ink)}
+.opt b{display:block}.opt small{color:var(--dim)}
+.back{background:none;border:0;color:var(--dim);font-weight:700;margin-bottom:10px;cursor:pointer;padding:0}
+input,select{width:100%;margin-top:10px}
+.state{padding:40px 10px;text-align:center;color:var(--dim)}
+.ok-icon{font-size:2.5rem}
+</style>
+</head><body>
+<div class="glass card" id="card">
+  <div id="loading" class="state">Loading your gift...</div>
+</div>
+<script type="module">
+const $=s=>document.querySelector(s);
+const code=location.pathname.split('/').filter(Boolean).pop();
+const card=$('#card');
+let VOUCHER=null;
+
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+async function load(){
+  try{
+    const res=await fetch('/.netlify/functions/get-gift?code='+encodeURIComponent(code));
+    const data=await res.json();
+    if(!res.ok)throw new Error(data.error||'Not found');
+    VOUCHER=data;
+    render();
+  }catch(e){
+    card.innerHTML=`<div class="state">This gift link isn't valid.</div>`;
+  }
+}
+
+function render(){
+  if(VOUCHER.status==='redeemed'){card.innerHTML='<div class="state"><div class="ok-icon">🎉</div>This gift has already been redeemed.</div>';return}
+  if(VOUCHER.status==='payout_pending'){card.innerHTML='<div class="state"><div class="ok-icon">⏳</div>This gift is on its way to a bank account — already claimed.</div>';return}
+  card.innerHTML=`
+    <p class="sub">You've received a gift</p>
+    <div class="amt">₦${VOUCHER.amount}</div>
+    <div id="msg">${esc(VOUCHER.message)||''}</div>
+    <div id="opts" class="opts">
+      <button class="opt" id="pickAirtime"><span>📱</span><span><b>Airtime or data</b><small>Sent straight to a phone number</small></span></button>
+      <button class="opt" id="pickCash"><span>🏦</span><span><b>Cash to bank</b><small>Paid within 24 hours</small></span></button>
+      <button class="opt" id="pickWallet"><span>💳</span><span><b>Save to WoodPay wallet</b><small>Optional — needs a free WoodPay account</small></span></button>
+    </div>`;
+  $('#pickAirtime').onclick=showAirtime;
+  $('#pickCash').onclick=showCash;
+  $('#pickWallet').onclick=()=>{location.href='https://woodpay.netlify.app/login?next=/&giftCode='+encodeURIComponent(code)};
+}
+
+function showAirtime(){
+  card.innerHTML=`
+    <button class="back" id="back">&larr; Back</button>
+    <p style="font-weight:800;margin-bottom:10px">Airtime or data — ₦${VOUCHER.amount}</p>
+    <select id="network"><option value="">Choose network</option><option value="mtn">MTN</option><option value="glo">Glo</option><option value="airtel">Airtel</option><option value="9mobile">9mobile</option></select>
+    <input id="phone" type="tel" placeholder="Phone number">
+    <button class="btn pri" id="go" style="width:100%;margin-top:14px">Send airtime</button>
+    <p class="sub" id="err" style="margin-top:10px"></p>`;
+  $('#back').onclick=render;
+  $('#go').onclick=async()=>{
+    const network=$('#network').value,phone=$('#phone').value.trim();
+    if(!network||!phone){$('#err').textContent='Fill in both fields.';return}
+    $('#go').disabled=true;$('#go').textContent='Sending...';
+    try{
+      const res=await fetch('/.netlify/functions/redeem-gift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,type:'airtime',phone,network})});
+      const data=await res.json();
+      if(!data.ok)throw new Error(data.error||'Could not send. Try again.');
+      card.innerHTML='<div class="state"><div class="ok-icon">✅</div>Sent! Check the phone in a moment.</div>';
+    }catch(e){$('#err').textContent=e.message;$('#go').disabled=false;$('#go').textContent='Send airtime'}
+  };
+}
+
+async function showCash(){
+  card.innerHTML=`
+    <button class="back" id="back">&larr; Back</button>
+    <p style="font-weight:800;margin-bottom:10px">Cash to bank — ₦${VOUCHER.amount}</p>
+    <select id="bank"><option value="">Loading banks...</option></select>
+    <input id="accNo" inputmode="numeric" maxlength="10" placeholder="Account number">
+    <p class="sub" id="accName" style="margin-top:8px;min-height:1.2em"></p>
+    <button class="btn pri" id="go" style="width:100%;margin-top:14px" disabled>Claim to this account</button>
+    <p class="sub" id="err" style="margin-top:10px"></p>`;
+  $('#back').onclick=render;
+  let resolvedName=null;
+  try{
+    const res=await fetch('/.netlify/functions/list-banks-proxy');
+    const data=await res.json();
+    const banks=data.data||data.banks||[];
+    $('#bank').innerHTML='<option value="">Choose your bank</option>'+banks.map(b=>`<option value="${b.code}">${esc(b.name)}</option>`).join('');
+  }catch(e){$('#bank').innerHTML='<option value="">Could not load banks</option>'}
+
+  async function tryResolve(){
+    resolvedName=null;$('#accName').textContent='';$('#go').disabled=true;
+    const accNo=$('#accNo').value.trim(),bankCode=$('#bank').value;
+    if(accNo.length!==10||!bankCode)return;
+    $('#accName').textContent='Checking...';
+    try{
+      const res=await fetch('/.netlify/functions/resolve-bank-for-gift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({accountNumber:accNo,bankCode})});
+      const data=await res.json();
+      if(!data.ok){$('#accName').textContent='Could not verify that account.';return}
+      resolvedName=data.accountName;
+      $('#accName').textContent='✓ '+data.accountName;
+      $('#go').disabled=false;
+    }catch(e){$('#accName').textContent='Could not verify that account.'}
+  }
+  $('#accNo').oninput=tryResolve;$('#bank').onchange=tryResolve;
+
+  $('#go').onclick=async()=>{
+    const accountNumber=$('#accNo').value.trim(),bankCode=$('#bank').value,bankName=$('#bank').selectedOptions[0]?.textContent||'';
+    if(!resolvedName){$('#err').textContent='Enter a valid account first.';return}
+    $('#go').disabled=true;$('#go').textContent='Claiming...';
+    try{
+      const res=await fetch('/.netlify/functions/redeem-gift',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code,type:'cash',accountNumber,accountName:resolvedName,bankCode,bankName})});
+      const data=await res.json();
+      if(!data.ok)throw new Error(data.error||'Could not claim. Try again.');
+      card.innerHTML='<div class="state"><div class="ok-icon">✅</div>Claimed — you\\'ll be paid within 24 hours.</div>';
+    }catch(e){$('#err').textContent=e.message;$('#go').disabled=false;$('#go').textContent='Claim to this account'}
+  };
+}
+
+load();
+</script>
+</body></html>

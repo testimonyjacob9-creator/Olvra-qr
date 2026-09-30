@@ -74,6 +74,17 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Gift vouchers: server only, in every direction. Creation goes through
+    // create-gift.js (payment re-verified with Flutterwave first), lookup
+    // for the recipient's landing page goes through get-gift.js (returns
+    // only amount/message/animation/status, never the sender), and
+    // redemption goes through redeem-gift.js (transactional, one-time).
+    // No client reads or writes this collection directly — an unrestricted
+    // read would let anyone enumerate voucher codes and amounts.
+    match /vouchers/{code} {
+      allow read, write: if false;
+    }
+
     match /{document=**} { allow read, write: if false; }
   }
 }

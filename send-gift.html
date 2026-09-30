@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Send a gift – Lumora</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#ffffff">
+<script src="https://checkout.flutterwave.com/v3.js"></script>
+<link rel="stylesheet" href="/app.css">
+<script>try{var t=localStorage.getItem('lumora_theme');if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)}catch(e){}</script>
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px}
+label{display:block;margin:16px 0 6px;font-weight:700;font-size:.85rem}
+.amts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.amts button{flex:1;min-width:76px}
+textarea{width:100%;min-height:90px;resize:vertical}
+.done{padding:20px;border-radius:14px;text-align:center}
+.done input{text-align:center;font-weight:700;margin-top:10px}
+</style>
+</head><body>
+<div id="gateScreen" hidden><div class="glass card">
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to send a gift</p>
+  <a class="btn pri" id="gateLink" href="/login?next=/gift">Sign in or create account</a>
+</div></div>
+<div id="gatedApp" hidden><div class="wrap">
+  <h1>Send a gift</h1>
+  <p class="sub">Real money the recipient can turn into airtime, data, or cash to their bank — no account needed on their end.</p>
+
+  <div id="form">
+    <label>Amount (₦)</label>
+    <div class="amts">
+      <button class="btn amt" data-a="500">500</button>
+      <button class="btn amt" data-a="1000">1,000</button>
+      <button class="btn amt" data-a="2000">2,000</button>
+      <button class="btn amt" data-a="5000">5,000</button>
+    </div>
+    <input id="amt" type="number" min="500" step="50" placeholder="Or enter an amount">
+
+    <label>Message</label>
+    <textarea id="msg" placeholder="Write something..." maxlength="500"></textarea>
+
+    <button class="btn pri" id="pay" style="width:100%;margin-top:18px">Pay and get link</button>
+    <p class="sub" id="err" role="alert" style="margin-top:10px"></p>
+    <p class="sub" style="margin-top:14px">Unredeemed gifts are refunded to you after 90 days.</p>
+  </div>
+
+  <div id="doneBox" class="glass done" hidden>
+    <p style="font-weight:800;font-size:1.1rem">Gift link ready</p>
+    <p class="sub">Share it with them on WhatsApp or anywhere.</p>
+    <input id="linkOut" readonly>
+    <button class="btn pri" id="copyLink" style="margin-top:12px;width:100%">Copy link</button>
+  </div>
+</div></div>
+<script type="module">
+import { auth } from '/firebase-init.js';
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { requireAuth } from '/gate.js';
+import { mountNav } from '/nav.js';
+mountNav(); requireAuth();
+
+const FLW_PUBLIC_KEY='FLWPUBK-dae6911df14de57441cd3735cfb06bc2-X';
+const $=s=>document.querySelector(s);
+const err=(m)=>{$('#err').textContent=m||''};
+
+document.querySelectorAll('.amt').forEach(b=>b.onclick=()=>{$('#amt').value=b.dataset.a});
+
+$('#pay').onclick=()=>{
+  err();
+  const u=auth.currentUser;
+  const amount=Number($('#amt').value);
+  const message=$('#msg').value.trim();
+  if(!(amount>=500)){err('Minimum gift is ₦500.');return}
+  const txRef='OQG-'+u.uid.slice(0,8)+'-'+Date.now();
+  FlutterwaveCheckout({
+    public_key:FLW_PUBLIC_KEY, tx_ref:txRef, amount, currency:'NGN',
+    payment_options:'card, banktransfer, ussd',
+    customer:{email:u.email,name:u.displayName||u.email},
+    customizations:{title:'Lumora gift', description:'₦'+amount+' gift voucher'},
+    callback: async (r)=>{
+      $('#pay').disabled=true;$('#pay').textContent='Creating your gift link...';
+      try{
+        const res=await fetch('/.netlify/functions/create-gift',{
+          method:'POST',
+          headers:{'Content-Type':'application/json',Authorization:'Bearer '+await u.getIdToken()},
+          body:JSON.stringify({transactionId:r.transaction_id,txRef,amount,message,animation:'none'})
+        });
+        const data=await res.json();
+        if(!res.ok)throw new Error(data.error||'Could not create the gift.');
+        $('#linkOut').value=location.origin+'/g/'+data.code;
+        $('#form').hidden=true;$('#doneBox').hidden=false;
+      }catch(e){err(e.message)}finally{$('#pay').disabled=false;$('#pay').textContent='Pay and get link'}
+    },
+    onclose(){}
+  });
+};
+$('#copyLink').onclick=()=>{navigator.clipboard.writeText($('#linkOut').value);$('#copyLink').textContent='Copied'};
+</script>
+</body></html>
