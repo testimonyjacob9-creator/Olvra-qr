@@ -120,16 +120,23 @@ const log=$('#log'),inp=$('#inp'),sendBtn=$('#send');
 /* ---- keep chat inside the visible area: above the on-screen keyboard; bottom nav only shown while the keyboard is closed ---- */
 const vv=window.visualViewport,chatEl=$('#chat');let baseH=0;
 function fit(){
-  if(!S.persona){chatEl.style.height='';document.body.classList.remove('kb');return}
-  const h=vv?vv.height:innerHeight;
+  const st=chatEl.style;
+  if(!S.persona){st.cssText='';document.body.classList.remove('kb');return}
+  const h=vv?vv.height:innerHeight,off=vv?vv.offsetTop:0;
   if(document.activeElement!==inp||h>baseH)baseH=Math.max(baseH,h,innerHeight);
   const kb=baseH-h>120;
   document.body.classList.toggle('kb',kb);
-  if(window.scrollY||(vv&&vv.offsetTop))window.scrollTo(0,0);
-  const nav=document.querySelector('.bottom-nav'),navH=!kb&&nav?nav.getBoundingClientRect().height:0;
-  const top=chatEl.getBoundingClientRect().top+window.scrollY;
-  chatEl.style.height=Math.max(220,Math.floor(h-top-navH))+'px';
-  if(kb)log.scrollTop=log.scrollHeight;
+  if(kb){
+    // Pin the chat to exactly the visible area above the keyboard, whichever way the browser handles the keyboard
+    // (resizes the page, or only the visual viewport and scrolls it).
+    st.cssText=`position:fixed;left:0;right:0;top:${off}px;height:${Math.floor(h)}px;z-index:60;background:var(--bg);box-sizing:border-box`;
+    log.scrollTop=log.scrollHeight;return;
+  }
+  st.cssText='';
+  if(window.scrollY)window.scrollTo(0,0);
+  const nav=document.querySelector('.bottom-nav'),navH=nav?nav.getBoundingClientRect().height:0;
+  const top=chatEl.getBoundingClientRect().top;
+  st.height=Math.max(220,Math.floor(h-top-navH))+'px';
 }
 if(vv){vv.addEventListener('resize',fit);vv.addEventListener('scroll',fit)}
 addEventListener('resize',fit);addEventListener('orientationchange',()=>{baseH=0;setTimeout(fit,300)});
