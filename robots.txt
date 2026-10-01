@@ -9,4 +9,7 @@ Disallow: /login
 Disallow: /helper
 Disallow: /chat
 Disallow: /account
+Disallow: /personas
+Disallow: /send-gift
+Disallow: /premium
 Sitemap: https://lumoral.netlify.app/sitemap.xml

@@ -1,7 +1,7 @@
 {
   "name": "Lumora",
   "short_name": "Lumora",
-  "description": "QR codes, business cards, love messages and a chat reply helper.",
+  "description": "QR codes, business cards, love messages and AI personas.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
