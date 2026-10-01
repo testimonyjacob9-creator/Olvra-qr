@@ -10,6 +10,7 @@ const { admin, db, FieldValue } = require("./_lib/firebase-admin");
 const { PERSONAS, getPersona, buildSystemPrompt, publicView } = require("./_lib/personas");
 const L = require("./_lib/limits");
 const G = require("./_lib/gemini");
+const PI = require("./_lib/persona-images");
 
 const E = G.E;
 const reply = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: JSON.stringify(body) });
@@ -50,8 +51,10 @@ const publicLimits = (lim) => ({ dailyMessages: lim.dailyMessages, dailyImages: 
 async function list(uid, data) {
   const tier = L.tierOf(data);
   const until = L.tierOf(data) === "premium" && data.premiumUntil && data.premiumUntil.toDate ? data.premiumUntil.toDate().toISOString() : null;
+  let v = {};
+  try { v = await PI.versions(); } catch (e) { console.error("persona images", e && e.message); } // portraits are optional; never block the list
   return { tier, premiumUntil: until,
-    personas: PERSONAS.map((p) => publicView(p, tier)), limits: publicLimits(L.LIMITS[tier]), usage: await readUsage(uid) };
+    personas: PERSONAS.map((p) => ({ ...publicView(p, tier), image: PI.imageUrl(p.id, v[p.id]) || p.image || null })), limits: publicLimits(L.LIMITS[tier]), usage: await readUsage(uid) };
 }
 
 async function send(uid, data, body) {

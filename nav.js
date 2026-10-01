@@ -20,7 +20,6 @@ const ITEMS = [
   ["/", "home", "Home"],
   ["/love", "love", "Love"],
   ["/chat", "chat", "Chat"],
-  ["/personas", "personas", "Personas"],
   ["/account", "me", "Me"],
   ["/help", "help", "Help"],
 ];
@@ -44,7 +43,7 @@ export function mountNav({ showLogo = true } = {}) {
   }
 
   let path = location.pathname.replace(/\/$/, "") || "/";
-  if (path === "/helper") path = "/chat";
+  if (path === "/helper" || path === "/personas") path = "/chat";
   const nav = document.createElement("div");
   nav.className = "bottom-nav";
   nav.innerHTML = `<div class="bottom-nav-inner">${ITEMS.map(([href, key, label]) => {

@@ -21,6 +21,10 @@ h2.sec{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(
 .pc.locked .av{opacity:.55}.pc.locked .pd{opacity:.75}
 .av{flex:none;display:grid;place-items:center;border-radius:50%;color:#fff;font-weight:800;width:48px;height:48px;font-size:1.05rem;position:relative}
 .av.sm{width:38px;height:38px;font-size:.9rem}
+.av img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+.pc .av{width:64px;height:64px;font-size:1.3rem;box-shadow:0 0 0 2px var(--line)}
+.pc.locked .av::after{content:"\1F512";position:absolute;right:-4px;bottom:-4px;font-size:.68rem;width:22px;height:22px;display:grid;place-items:center;background:var(--bg-2);border:1px solid var(--line);border-radius:50%;opacity:1}
+.unl{margin-top:6px;font-size:.74rem;font-weight:700;color:var(--accent)}
 .pb{flex:1;min-width:0}.pn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:800}
 .pt{font-size:.8rem;color:var(--dim);font-weight:600}.pd{font-size:.88rem;margin-top:4px;line-height:1.45}
 .bdg{font-size:.62rem;font-weight:800;letter-spacing:.06em;padding:2px 7px;border-radius:99px;border:1px solid var(--line);color:var(--dim);display:inline-flex;align-items:center;gap:4px}
@@ -111,11 +115,11 @@ import {requireAuth} from '/gate.js';
 import {mountNav} from '/nav.js';
 import {auth,db} from '/firebase-init.js';
 import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {collection,query,orderBy,limit,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,query,orderBy,limit,getDocs,getDoc,doc} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 mountNav();requireAuth();
 
 const $=s=>document.querySelector(s), el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
-const S={tier:'free',personas:[],limits:null,usage:null,persona:null,convId:null,busy:false,img:null,last:null,uid:null};
+const S={use:{},tier:'free',personas:[],limits:null,usage:null,persona:null,convId:null,busy:false,img:null,last:null,uid:null};
 const log=$('#log'),inp=$('#inp'),sendBtn=$('#send');
 /* ---- keep chat inside the visible area: above the on-screen keyboard; bottom nav only shown while the keyboard is closed ---- */
 const vv=window.visualViewport,chatEl=$('#chat');let baseH=0;
@@ -153,19 +157,30 @@ async function api(body){
     return {status:r.status,data};
   }catch(e){return {status:0,data:{error:'No connection. Check your internet and try again.'}}}
 }
-function avatar(p,cls){const a=el('div','av'+(cls?' '+cls:''),p.name.replace(/^The /,'')[0]);a.style.background=`linear-gradient(135deg,${p.avatar.from},${p.avatar.to})`;return a}
+const SAFE_IMG=/^\/\.netlify\/functions\/persona-image\?id=[a-z-]+&v=\d+$/; // portraits only ever come from our own image endpoint
+function avatar(p,cls){
+  const a=el('div','av'+(cls?' '+cls:''));a.style.background=`linear-gradient(135deg,${p.avatar.from},${p.avatar.to})`;
+  const initial=()=>{a.textContent=p.name.replace(/^The /,'')[0]};
+  if(p.image&&SAFE_IMG.test(p.image)){
+    const i=el('img');i.src=p.image;i.alt=`Portrait of ${p.name}, ${p.title}`;i.loading='lazy';i.decoding='async';i.width=i.height=128;
+    i.onerror=()=>{i.remove();initial()};a.appendChild(i);
+  }else initial();
+  return a;
+}
 function badge(p){const b=el('span','bdg '+p.accessLevel);b.innerHTML=(p.locked?LOCK:'')+p.badge;return b}
 
 function card(p){
   const b=el('button','pc'+(p.locked?' locked':''));b.type='button';
   const body=el('div','pb'),n=el('div','pn',p.name);n.appendChild(badge(p));
   body.append(n,el('div','pt',p.title),el('div','pd',p.description),el('div','cat',p.category+' \u00b7 '+p.traits.slice(0,3).join(', ')));
+  if(p.locked)body.appendChild(el('div','unl','Tap to unlock with Premium'));
   b.append(avatar(p),body);b.onclick=()=>p.locked?upsell(p):openChat(p);return b;
 }
 function renderPicker(){
   const f=$('#gFree'),m=$('#gPrem');f.textContent='';m.textContent='';
-  S.personas.filter(p=>p.accessLevel==='free').forEach(p=>f.appendChild(card(p)));
-  S.personas.filter(p=>p.accessLevel!=='free').forEach(p=>m.appendChild(card(p)));
+  const by=(a,b)=>(S.use[b.id]||0)-(S.use[a.id]||0); // most used first, ties keep default order
+  S.personas.filter(p=>p.accessLevel==='free').sort(by).forEach(p=>f.appendChild(card(p)));
+  S.personas.filter(p=>p.accessLevel!=='free').sort(by).forEach(p=>m.appendChild(card(p)));
   usage();
 }
 function usage(){
@@ -181,7 +196,7 @@ function upsell(p){
   $('#stext').textContent=`Upgrade to Premium to chat with ${p.name} and all other Premium personas.`;
   $('#sheet').hidden=false;
 }
-$('#sclose').onclick=()=>$('#sheet').hidden=true;
+$('#sclose').onclick=()=>{$('#sheet').hidden=true;if(fromChat&&!S.persona)location.href='/chat'};
 $('#sheet').onclick=e=>{if(e.target.id==='sheet')e.target.hidden=true};
 
 /* ---- history (reads go straight to Firestore under owner-only rules; writes only via the function) ---- */
@@ -221,7 +236,7 @@ function greet(){const g=S.persona.greetings;bubble('model',g[Math.floor(Math.ra
 async function openChat(p,convId){
   S.persona=p;S.convId=convId||null;S.last=null;setImg(null);
   $('#picker').hidden=true;$('#chat').hidden=false;document.body.classList.add('inchat');window.scrollTo(0,0);fit();
-  const a=$('#cav');a.style.background=`linear-gradient(135deg,${p.avatar.from},${p.avatar.to})`;a.textContent=p.name.replace(/^The /,'')[0];
+  $('#cav').replaceWith(Object.assign(avatar(p,'sm'),{id:'cav'}));
   $('#cname').textContent=p.name;log.textContent='';inp.value='';grow();usage();
   if(!convId){greet();inp.focus();return}
   try{
@@ -233,7 +248,8 @@ function goPicker(){
   $('#chat').hidden=true;$('#picker').hidden=false;document.body.classList.remove('inchat');S.persona=null;S.convId=null;fit();
   loadRecent();usage();
 }
-$('#back').onclick=goPicker;
+let fromChat=false; // opened from the Chat page: Back returns there
+$('#back').onclick=()=>fromChat?(location.href='/chat'):goPicker();
 $('#newchat').onclick=()=>{if(S.busy)return;S.convId=null;S.last=null;log.textContent='';setImg(null);greet();inp.focus()};
 
 function grow(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,120)+'px';sendBtn.disabled=S.busy||!(inp.value.trim()||S.img)}
@@ -278,13 +294,28 @@ async function deliver(){
   grow();
 }
 
+async function loadUse(){
+  try{const s=await getDocs(query(collection(db,'users',S.uid,'conversations'),orderBy('updatedAt','desc'),limit(100)));
+    S.use={};s.docs.forEach(d=>{const c=d.data();S.use[c.personaId]=(S.use[c.personaId]||0)+(c.messageCount||0)})}catch(e){S.use={}}
+}
+
 /* ---- boot ---- */
 onAuthStateChanged(auth,async u=>{
   if(!u)return;S.uid=u.uid;
   const r=await api({action:'list'});
   if(r.status!==200){const e=$('#pickErr');e.hidden=false;e.textContent=r.status===403?r.data.error:'Couldn\u2019t load the personas. Please try again.';return}
   Object.assign(S,{tier:r.data.tier,personas:r.data.personas,limits:r.data.limits,usage:r.data.usage});
-  renderPicker();loadRecent();
+  await loadUse();renderPicker();loadRecent();
+  const m=/^#([cp])=(.+)$/.exec(location.hash);
+  if(m){
+    const id=decodeURIComponent(m[2]);history.replaceState(null,'',location.pathname);fromChat=true;
+    try{
+      let p;
+      if(m[1]==='p')p=S.personas.find(x=>x.id===id);
+      else{const c=await getDoc(doc(db,'users',S.uid,'conversations',id));p=c.exists()&&S.personas.find(x=>x.id===c.data().personaId)}
+      if(p){p.locked?upsell(p):openChat(p,m[1]==='c'?id:undefined)}
+    }catch(e){}
+  }
 });
 </script>
 </body></html>

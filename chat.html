@@ -66,6 +66,10 @@ h2.sec{font-size:1rem;margin:26px 0 10px;display:flex;align-items:center;gap:8px
   </div>
   <h2 class="sec">Friends</h2>
   <div id="friendList"></div>
+  <div id="aiSec" hidden>
+    <h2 class="sec">AI personas</h2>
+    <div id="aiList"></div>
+  </div>
 </div></div>
 
 <section id="conv" hidden aria-label="Conversation">
@@ -90,7 +94,7 @@ import {auth,db} from '/firebase-init.js';
 import {requireAuth} from '/gate.js';
 import {mountNav} from '/nav.js';
 import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {collection,query,where,orderBy,limit,onSnapshot} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {collection,query,where,orderBy,limit,onSnapshot,getDocs} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 mountNav();requireAuth();
 
 const $=s=>document.querySelector(s);
@@ -138,6 +142,32 @@ $('#fadd').onclick=async()=>{
 };
 $('#fe').onkeydown=e=>{if(e.key==='Enter')$('#fadd').click()};
 
+// ---- AI persona chats: recent conversations, tap to continue in /personas ----
+const agoT=t=>{const m=Math.round((Date.now()-t)/60000);return m<1?'just now':m<60?m+' min ago':m<1440?Math.round(m/60)+' h ago':Math.round(m/1440)+' d ago'};
+async function loadAi(){
+  try{
+    const {personas}=await api('persona-chat',{action:'list'});
+    const snap=await getDocs(query(collection(db,'users',me.uid,'conversations'),orderBy('updatedAt','desc'),limit(100)));
+    const used={},latest={};
+    snap.docs.forEach(d=>{const c=d.data();used[c.personaId]=(used[c.personaId]||0)+(c.messageCount||0);if(!latest[c.personaId])latest[c.personaId]={id:d.id,preview:c.preview||'',at:c.updatedAt}});
+    // Most used persona first; ties keep the default order.
+    const order=personas.map((p,i)=>({p,i,n:used[p.id]||0})).sort((x,y)=>y.n-x.n||x.i-y.i).map(x=>x.p);
+    const row=p=>{
+      const l=latest[p.id],href=l?'/personas#c='+encodeURIComponent(l.id):'/personas#p='+encodeURIComponent(p.id);
+      const sub=l?(l.preview?l.preview+' \u00b7 ':'')+agoT(l.at):p.title;
+      const safe=p.image&&/^\/\.netlify\/functions\/persona-image\?id=[a-z-]+&v=\d+$/.test(p.image);
+      const av=`<span class="av" aria-hidden="true" style="color:#fff;font-weight:800;overflow:hidden;background:linear-gradient(135deg,${esc(p.avatar.from)},${esc(p.avatar.to)})">${safe?`<img src="${esc(p.image)}" alt="" loading="lazy" decoding="async" width="96" height="96" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.remove()">`:esc(p.name.replace(/^The /,'')[0])}</span>`;
+      return `<a class="glass row" href="${href}" style="text-decoration:none">${av}<div class="who"><b>${esc(p.name)}${p.locked?' \ud83d\udd12':''}</b><small>${esc(sub)}</small></div></a>`;
+    };
+    const TOP=5,more=order.length>TOP;
+    $('#aiList').innerHTML=order.map((p,i)=>`<div${i>=TOP?' class="aimore" hidden':''}>${row(p)}</div>`).join('')
+      +(more?'<button class="mini" id="aiToggle" type="button" style="margin:2px auto 10px;display:block">Show all personas</button>':'');
+    const t=$('#aiToggle');
+    if(t)t.onclick=()=>{const open=t.dataset.o!=='1';t.dataset.o=open?'1':'';document.querySelectorAll('.aimore').forEach(e=>e.hidden=!open);t.textContent=open?'Show fewer':'Show all personas'};
+    $('#aiSec').hidden=false;
+  }catch(e){$('#aiSec').hidden=true}
+}
+
 // ---- conversation ----
 const time=t=>t&&t.toDate?t.toDate().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'';
 function openConv(it){
@@ -177,7 +207,7 @@ $('#rem').onclick=async()=>{
 };
 
 onAuthStateChanged(auth,u=>{
-  if(!u)return;me=u;refresh();
+  if(!u)return;me=u;refresh();loadAi();
   onSnapshot(query(collection(db,'friendships'),where('users','array-contains',u.uid)),later,()=>{});
 });
 </script>

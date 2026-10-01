@@ -49,6 +49,7 @@ textarea{min-height:100px}
     <button data-tab="users" aria-pressed="true">Users</button>
     <button data-tab="reports" aria-pressed="false">Reports<span class="badge" id="repBadge" hidden>0</span></button>
     <button data-tab="messages" aria-pressed="false">Messages</button>
+    <button data-tab="personas" aria-pressed="false">Personas</button>
   </div>
 
   <section id="tab-users">
@@ -59,6 +60,11 @@ textarea{min-height:100px}
   <section id="tab-reports" hidden>
     <div class="tools"><span id="repCount"></span><label style="margin:0;display:flex;gap:8px;align-items:center"><input type="checkbox" id="showAll" style="width:auto"> Show closed</label></div>
     <div id="repList"><p class="sub">Loading...</p></div>
+  </section>
+
+  <section id="tab-personas" hidden>
+    <p class="sub" style="margin:0 0 10px">Portraits for the 10 AI personas. Pick a photo and it is cropped square and optimized in your browser. Changes appear on the Personas page immediately, no deployment needed.</p>
+    <div id="pgrid"><p class="sub">Loading...</p></div>
   </section>
 
   <section id="tab-messages" hidden>
@@ -98,8 +104,69 @@ onAuthStateChanged(auth,async u=>{
 });
 $$('.tabs button').forEach(b=>b.onclick=()=>{
   $$('.tabs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
-  ['users','reports','messages'].forEach(t=>$('#tab-'+t).hidden=t!==b.dataset.tab);
+  ['users','reports','messages','personas'].forEach(t=>$('#tab-'+t).hidden=t!==b.dataset.tab);
+  if(b.dataset.tab==='personas'&&!pLoaded)loadPersonas();
 });
+
+
+// ---- persona portraits ----
+let pLoaded=false;
+const SAFE_P=/^\/\.netlify\/functions\/persona-image\?id=[a-z-]+&v=\d+$/;
+async function loadPersonas(){
+  const g=$('#pgrid');
+  try{const {personas}=await call('admin-persona-image',{action:'list'});pLoaded=true;g.textContent='';
+    g.style.cssText='display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))';
+    personas.forEach(p=>g.appendChild(personaCard(p)))}
+  catch(e){g.innerHTML='<p class="sub"></p>';g.firstChild.textContent=e.message||'Could not load personas.'}
+}
+function portrait(p,src){
+  const d=document.createElement('div');d.style.cssText=`width:96px;height:96px;border-radius:50%;margin:0 auto 8px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:1.6rem;overflow:hidden;background:linear-gradient(135deg,${p.avatar.from},${p.avatar.to})`;
+  if(src){const i=document.createElement('img');i.src=src;i.alt='Portrait of '+p.name;i.style.cssText='width:100%;height:100%;object-fit:cover';d.appendChild(i)}
+  else d.textContent=p.name.replace(/^The /,'')[0];
+  return d;
+}
+// Crop to a centered square, shrink to 512px and re-encode (WebP, else JPEG) until it is under ~170 KB.
+function optimize(file){return new Promise((res,rej)=>{
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type))return rej(new Error('Choose a JPG, PNG or WebP image.'));
+  if(file.size>12e6)return rej(new Error('That file is too large (max 12 MB).'));
+  const u=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+    const side=Math.min(im.naturalWidth,im.naturalHeight);if(side<256){URL.revokeObjectURL(u);return rej(new Error('That image is too small. Use at least 256 \u00d7 256 px.'))}
+    for(const size of [512,448,384]){
+      const c=document.createElement('canvas');c.width=c.height=size;
+      c.getContext('2d').drawImage(im,(im.naturalWidth-side)/2,(im.naturalHeight-side)/2,side,side,0,0,size,size);
+      for(const [type,qs] of [['image/webp',[.85,.75,.65]],['image/jpeg',[.85,.75,.65]]]){
+        for(const q of qs){const out=c.toDataURL(type,q);if(out.startsWith('data:'+type)&&out.length*.75<170*1024){URL.revokeObjectURL(u);return res(out)}}
+      }
+    }
+    URL.revokeObjectURL(u);rej(new Error('Could not shrink that image enough. Try a simpler photo.'));
+  };
+  im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error('That image could not be read.'))};im.src=u;
+})}
+function personaCard(p){
+  const c=document.createElement('div');c.className='card';c.style.cssText='text-align:center;padding:12px';
+  let shown=p.image&&SAFE_P.test(p.image)?p.image:null,custom=p.custom,pending=null;
+  const holder=document.createElement('div'),nm=document.createElement('b'),tier=document.createElement('div'),msg=document.createElement('p'),acts=document.createElement('div');
+  nm.textContent=p.name;tier.className='sub';tier.textContent=(p.accessLevel==='free'?'FREE':'PREMIUM')+(custom?' \u00b7 custom image':' \u00b7 default');
+  msg.className='sub';msg.style.minHeight='1.2em';msg.setAttribute('aria-live','polite');acts.className='acts';acts.style.cssText='flex-wrap:wrap;justify-content:center;gap:6px';
+  const file=document.createElement('input');file.type='file';file.accept='image/jpeg,image/png,image/webp';file.hidden=true;
+  const mk=(t,cls)=>{const b=document.createElement('button');b.type='button';b.className='btn'+(cls?' '+cls:'');b.textContent=t;return b};
+  const pick=mk('Choose photo'),save=mk('Save','pri'),cancel=mk('Cancel'),reset=mk('Reset to default');
+  const draw=()=>{holder.replaceChildren(portrait(p,pending||shown));save.hidden=cancel.hidden=!pending;pick.hidden=!!pending;reset.hidden=!custom||!!pending;
+    tier.textContent=(p.accessLevel==='free'?'FREE':'PREMIUM')+(pending?' \u00b7 preview, not saved':custom?' \u00b7 custom image':' \u00b7 default')};
+  const busy=on=>[pick,save,cancel,reset].forEach(b=>b.disabled=on);
+  pick.onclick=()=>file.click();
+  file.onchange=async()=>{const f=file.files[0];file.value='';if(!f)return;msg.textContent='Optimizing...';
+    try{pending=await optimize(f);msg.textContent=Math.round(pending.length*.75/1024)+' KB \u00b7 looks good? Save it.'}catch(e){pending=null;msg.textContent=e.message}draw()};
+  cancel.onclick=()=>{pending=null;msg.textContent='';draw()};
+  save.onclick=async()=>{busy(true);msg.textContent='Saving...';
+    try{const r=await call('admin-persona-image',{action:'set',personaId:p.id,image:pending});shown=r.image;custom=true;pending=null;msg.textContent='Saved. Live on the Personas page.'}
+    catch(e){msg.textContent=e.message||'Could not save.'}busy(false);draw()};
+  reset.onclick=async()=>{if(!confirm('Reset '+p.name+' to the default image?'))return;busy(true);msg.textContent='Resetting...';
+    try{await call('admin-persona-image',{action:'reset',personaId:p.id});shown=null;custom=false;msg.textContent='Reset to default.'}
+    catch(e){msg.textContent=e.message||'Could not reset.'}busy(false);draw()};
+  acts.append(pick,save,cancel,reset);c.append(holder,nm,tier,acts,msg,file);draw();return c;
+}
 
 // ---- users ----
 const active=u=>u.premiumUntil&&new Date(u.premiumUntil)>new Date();
