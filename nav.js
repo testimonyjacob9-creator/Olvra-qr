@@ -35,7 +35,7 @@ export function mountNav({ showLogo = true } = {}) {
   if (showLogo) {
     const bar = document.createElement("div");
     bar.className = "appbar";
-    bar.innerHTML = `<a class="logo" href="/">lum<span>ora</span></a>
+    bar.innerHTML = `<a class="logo" href="/">lum<span>ora</span><small class="by">OLVRA</small></a>
       <div class="appbar-r"><a class="plan-pill free" id="navPlan" href="/account" hidden></a><span id="navTheme"></span><a class="bellbtn" id="navBell" href="/notifications" aria-label="Notifications"><svg viewBox="0 0 24 24" width="20px" height="20px" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9a6 6 0 0112 0c0 5 2 6 2 7H4c0-1 2-2 2-7z"/><path d="M10 20a2 2 0 004 0"/></svg><span class="bell-badge" id="navBellBadge"></span></a></div>`;
     document.body.prepend(bar);
     mountThemeToggle(document.getElementById("navTheme"));

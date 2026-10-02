@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
-<title>AI Personas – Lumora</title>
+<title>AI Personas – Lumora OLVRA</title>
 <meta name="robots" content="noindex">
 <meta name="description" content="Chat with AI personas. Share a screenshot and get their take.">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest">
@@ -52,6 +52,9 @@ body.inchat.kb .use{display:none}
 .m.err{align-self:flex-start;border:1px solid #e11d48;color:#e11d48;background:var(--bg-2);border-bottom-left-radius:6px}
 .m img{display:block;max-width:100%;max-height:200px;border-radius:10px;margin-bottom:6px}
 .m .rt2{display:block;margin-top:8px;font:inherit;font-weight:800;color:var(--accent);background:none;border:0;padding:0;cursor:pointer}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start;margin-top:2px}
+.chips button{font:inherit;font-size:.85rem;font-weight:600;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bg-2);color:var(--ink);cursor:pointer}
+.chips button:active{transform:scale(.97)}
 .typing{align-self:flex-start;display:flex;gap:4px;padding:14px 16px;background:var(--bg-2);border:1px solid var(--line);border-radius:18px;border-bottom-left-radius:6px}
 .typing i{width:7px;height:7px;border-radius:50%;background:var(--dim);animation:bl 1s infinite ease-in-out}.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}@keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
@@ -232,8 +235,25 @@ function bubble(role,text,img){
   if(text)m.appendChild(document.createTextNode(text));
   log.appendChild(m);log.scrollTop=log.scrollHeight;return m;
 }
-function greet(){const g=S.persona.greetings;bubble('model',g[Math.floor(Math.random()*g.length)])}
+function greet(){
+  const g=S.persona.greetings;bubble('model',g[Math.floor(Math.random()*g.length)]);
+  const st=S.persona.starters||[];
+  if(st.length){const c=el('div','chips');st.forEach(x=>{const b=el('button','',x.label);b.type='button';b.onclick=()=>{if(S.busy)return;S.convId=null;S.last={text:x.text,image:null,mode:x.mode};deliver()};c.appendChild(b)});log.appendChild(c)}
+}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+// Show a multi-part reply like a person texting: one bubble, a short typing pause, the next bubble.
+async function reveal(parts){
+  const tok=S.rev=(S.rev||0)+1,p0=S.persona;
+  for(let i=0;i<parts.length;i++){
+    if(S.rev!==tok||S.persona!==p0)break;
+    if(i>0){const t=el('div','typing');t.innerHTML='<i></i><i></i><i></i>';log.appendChild(t);log.scrollTop=log.scrollHeight;
+      await sleep(Math.min(1500,420+parts[i].length*14));t.remove();if(S.rev!==tok||S.persona!==p0)break}
+    bubble('model',parts[i]);
+  }
+  if(S.rev===tok)S.busy=false;grow();
+}
 async function openChat(p,convId){
+  S.rev=(S.rev||0)+1;S.busy=false;
   S.persona=p;S.convId=convId||null;S.last=null;setImg(null);
   $('#picker').hidden=true;$('#chat').hidden=false;document.body.classList.add('inchat');window.scrollTo(0,0);fit();
   $('#cav').replaceWith(Object.assign(avatar(p,'sm'),{id:'cav'}));
@@ -245,12 +265,13 @@ async function openChat(p,convId){
   }catch(e){bubble('model','Couldn\u2019t load this conversation.');log.lastChild.className='m err'}
 }
 function goPicker(){
+  S.rev=(S.rev||0)+1;S.busy=false;
   $('#chat').hidden=true;$('#picker').hidden=false;document.body.classList.remove('inchat');S.persona=null;S.convId=null;fit();
   loadRecent();usage();
 }
 let fromChat=false; // opened from the Chat page: Back returns there
 $('#back').onclick=()=>fromChat?(location.href='/chat'):goPicker();
-$('#newchat').onclick=()=>{if(S.busy)return;S.convId=null;S.last=null;log.textContent='';setImg(null);greet();inp.focus()};
+$('#newchat').onclick=()=>{if(S.busy)return;S.rev=(S.rev||0)+1;S.convId=null;S.last=null;log.textContent='';setImg(null);greet();inp.focus()};
 
 function grow(){inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,120)+'px';sendBtn.disabled=S.busy||!(inp.value.trim()||S.img)}
 inp.addEventListener('input',grow);
@@ -276,15 +297,16 @@ $('#file').onchange=async e=>{const f=e.target.files[0];if(!f)return;
 $('#comp').onsubmit=e=>{e.preventDefault();if(S.busy)return;const t=inp.value.trim();if(!t&&!S.img)return;
   S.last={text:t,image:S.img};inp.value='';setImg(null);grow();deliver()};
 async function deliver(){
-  const {text,image}=S.last;S.busy=true;grow();
-  log.querySelectorAll('.m.err').forEach(n=>n.remove());
-  if(!S.last.shown){bubble('user',text,image);S.last.shown=true}
+  const {text,image,mode}=S.last;S.busy=true;grow();
+  log.querySelectorAll('.m.err,.chips').forEach(n=>n.remove());
+  if(!S.last.shown){bubble('user',text||(mode==='mystery'?'Start a mystery':''),image);S.last.shown=true}
   const ty=el('div','typing');ty.innerHTML='<i></i><i></i><i></i>';log.appendChild(ty);log.scrollTop=log.scrollHeight;
-  const r=await api({action:'send',personaId:S.persona.id,conversationId:S.convId,message:text,image:image||undefined});
-  ty.remove();S.busy=false;
+  const r=await api({action:'send',personaId:S.persona.id,conversationId:S.convId,message:text,mode:mode||undefined,image:image||undefined});
+  ty.remove();if(r.status!==200)S.busy=false;
   if(r.status===200){
-    S.convId=r.data.conversationId;S.last=null;bubble('model',r.data.reply);
+    S.convId=r.data.conversationId;S.last=null;
     S.usage={messages:r.data.usage.messages,images:r.data.usage.images};S.limits={...S.limits,dailyMessages:r.data.usage.dailyMessages,dailyImages:r.data.usage.dailyImages};usage();
+    await reveal(r.data.replies&&r.data.replies.length?r.data.replies:[r.data.reply]);
   }else{
     const c=r.data.code,m=bubble('model',r.data.error||'Something went wrong. Please try again.');m.className='m err';
     if(c==='PREMIUM_REQUIRED'){S.last=null;upsell(S.persona)}

@@ -13,8 +13,8 @@ const BADGE = { free: "FREE", premium: "PREMIUM" };
 const RESET_UTC_OFFSET_HOURS = 1;
 
 const LIMITS = {
-  free:     { dailyMessages: 15,  dailyImages: 3,  perMinute: 5,  historyMessages: 10, maxInputChars: 1500, maxOutputTokens: 500, maxImageChars: 2000000 },
-  premium:  { dailyMessages: 150, dailyImages: 25, perMinute: 12, historyMessages: 16, maxInputChars: 3000, maxOutputTokens: 900, maxImageChars: 2500000 },
+  free:     { dailyMessages: 15,  dailyImages: 3,  perMinute: 5,  historyMessages: 24, maxInputChars: 1500, maxOutputTokens: 500, maxImageChars: 2000000 },
+  premium:  { dailyMessages: 150, dailyImages: 25, perMinute: 12, historyMessages: 40, maxInputChars: 3000, maxOutputTokens: 900, maxImageChars: 2500000 },
 };
 
 const IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];

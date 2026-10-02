@@ -11,6 +11,8 @@ const { PERSONAS, getPersona, buildSystemPrompt, publicView } = require("./_lib/
 const L = require("./_lib/limits");
 const G = require("./_lib/gemini");
 const PI = require("./_lib/persona-images");
+const { splitReplies } = require("./_lib/replies");
+const M = require("./_lib/mysteries");
 
 const E = G.E;
 const reply = (statusCode, body) => ({ statusCode, headers: { "content-type": "application/json", "cache-control": "no-store" }, body: JSON.stringify(body) });
@@ -69,18 +71,24 @@ async function send(uid, data, body) {
   const image = body.image ? G.parseImage(body.image, lim.maxImageChars) : null;
   if (body.image && !image) throw E(422, "That image type isn't supported. Use a JPG, PNG or WebP.", "BAD_IMAGE");
   if (image && !(persona.capabilities && persona.capabilities.images)) throw E(422, `${persona.name} can't look at images.`, "NO_IMAGES");
-  if (!text && !image) throw E(400, "Say something to get started.", "EMPTY");
+  const wantsMystery = body.mode === "mystery" && !!(persona.capabilities && persona.capabilities.mystery);
+  if (!text && !image && !wantsMystery) throw E(400, "Say something to get started.", "EMPTY");
   if (!process.env.GEMINI_API_KEY) throw E(503, "AI Personas are temporarily unavailable. Please try again later.", "NOT_CONFIGURED");
 
   // Existing conversation must belong to this user and this persona.
-  let convRef = null, isNew = true;
+  let convRef = null, isNew = true, caseId = null;
   if (body.conversationId) {
     convRef = convs(uid).doc(String(body.conversationId));
     const cs = await convRef.get();
     if (!cs.exists) throw E(404, "That conversation no longer exists. Start a new one.", "NO_CONVERSATION");
     if (cs.data().personaId !== persona.id) throw E(400, "That conversation belongs to a different persona.", "WRONG_PERSONA");
     isNew = false;
+    caseId = cs.data().caseId || null;
   } else convRef = convs(uid).doc();
+  // Starting a mystery is only possible from Sherlock, and only once per conversation.
+  const startCase = wantsMystery && !caseId ? M.pickCase() : null;
+  if (startCase) caseId = startCase.id;
+  const activeCase = caseId ? M.getCase(caseId) : null;
 
   const used = await reserve(uid, tier, !!image, persona.id);
   try {
@@ -89,20 +97,30 @@ async function send(uid, data, body) {
       const snap = await convRef.collection("messages").orderBy("createdAt", "desc").limit(lim.historyMessages).get();
       history = snap.docs.map((d) => d.data()).reverse();
     }
-    const out = await G.generate({
-      system: buildSystemPrompt(persona), contents: G.buildContents(history, text, image), maxOutputTokens: lim.maxOutputTokens,
-    });
+    // A new mystery opens with the authored briefing (no model call). Everything else goes to Gemini, with the
+    // secret case file added to Sherlock's instructions for as long as the conversation has a case.
+    const out = startCase
+      ? { text: startCase.brief.join("\n---\n"), tokensIn: 0, tokensOut: 0 }
+      : await G.generate({
+          system: buildSystemPrompt(persona, activeCase && M.mysteryPrompt(activeCase)),
+          contents: G.buildContents(history, text, image), maxOutputTokens: lim.maxOutputTokens,
+        });
+    const parts = splitReplies(out.text);
+    if (!parts.length) throw E(502, "Couldn't get a reply right now. Please try again.", "EMPTY");
 
+    // Each short message is stored on its own, so history reloads exactly as it appeared.
+    const userText = text || (startCase ? "Start a mystery" : "");
     const now = Date.now(), batch = db.batch();
-    batch.set(convRef.collection("messages").doc(), { role: "user", text, hasImage: !!image, createdAt: now });
-    batch.set(convRef.collection("messages").doc(), { role: "model", text: out.text, createdAt: now + 1 });
-    const preview = out.text.slice(0, 80);
-    if (isNew) batch.set(convRef, { personaId: persona.id, title: (text || "Screenshot chat").slice(0, 40), createdAt: now, updatedAt: now + 1, messageCount: 2, preview });
-    else batch.update(convRef, { updatedAt: now + 1, messageCount: FieldValue.increment(2), preview });
+    batch.set(convRef.collection("messages").doc(), { role: "user", text: userText, hasImage: !!image, createdAt: now });
+    parts.forEach((t, i) => batch.set(convRef.collection("messages").doc(), { role: "model", text: t, createdAt: now + 1 + i }));
+    const last = now + parts.length, preview = parts[0].slice(0, 80);
+    const extra = startCase ? { caseId: startCase.id } : {};
+    if (isNew) batch.set(convRef, { personaId: persona.id, title: (startCase ? startCase.title : (userText || "Screenshot chat")).slice(0, 40), createdAt: now, updatedAt: last, messageCount: 2, preview, ...extra });
+    else batch.update(convRef, { updatedAt: last, messageCount: FieldValue.increment(2), preview, ...extra });
     await batch.commit();
     usageRef(uid).set({ tokensIn: FieldValue.increment(out.tokensIn), tokensOut: FieldValue.increment(out.tokensOut) }, { merge: true }).catch(() => {});
 
-    return { conversationId: convRef.id, reply: out.text, usage: { messages: used.messages, images: used.images, dailyMessages: lim.dailyMessages, dailyImages: lim.dailyImages } };
+    return { conversationId: convRef.id, reply: parts.join("\n\n"), replies: parts, mystery: !!activeCase, usage: { messages: used.messages, images: used.images, dailyMessages: lim.dailyMessages, dailyImages: lim.dailyImages } };
   } catch (e) {
     await refund(uid, !!image, persona.id);
     throw e;

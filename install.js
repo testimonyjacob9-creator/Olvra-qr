@@ -69,12 +69,12 @@ function showSheet() {
   el.id = 'installSheet';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-modal', 'true');
-  el.setAttribute('aria-label', 'Install Lumora');
+  el.setAttribute('aria-label', 'Install Lumora OLVRA');
   const body = deferred
-    ? '<p>Add Lumora to your home screen for quick access, full-screen and faster loading.</p>'
+    ? '<p>Add Lumora OLVRA to your home screen for quick access, full-screen and faster loading.</p>'
     : '<ol><li>Tap the <b>Share</b> icon in Safari</li><li>Choose <b>Add to Home Screen</b></li><li>Tap <b>Add</b></li></ol>';
   el.innerHTML = `<div class="box">
-    <div class="row"><img src="/icon-192.png" alt=""><div><h3>Install Lumora</h3><p>Use it like a real app.</p></div></div>
+    <div class="row"><img src="/icon-192.png" alt=""><div><h3>Install Lumora OLVRA</h3><p>Use it like a real app.</p></div></div>
     ${body}
     <div class="acts">
       <button type="button" id="installNo">Not now</button>
