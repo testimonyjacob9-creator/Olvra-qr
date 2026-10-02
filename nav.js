@@ -43,7 +43,7 @@ export function mountNav({ showLogo = true } = {}) {
   }
 
   let path = location.pathname.replace(/\/$/, "") || "/";
-  if (path === "/helper" || path === "/personas") path = "/chat";
+  if (path === "/helper" || path === "/personas" || path === "/chat-helper-classic") path = "/chat";
   const nav = document.createElement("div");
   nav.className = "bottom-nav";
   nav.innerHTML = `<div class="bottom-nav-inner">${ITEMS.map(([href, key, label]) => {
