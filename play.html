@@ -37,6 +37,10 @@
 .bm{display:flex;align-items:center;gap:10px;font-size:.74rem;color:#ffffff9a;font-weight:700}
 .pips{display:flex;gap:4px}.pips i{width:16px;height:5px;border-radius:3px;background:#ffffff26}.pips i.on{background:var(--c2);box-shadow:0 0 8px var(--c2)}
 .bc.vex{border-color:#ff174466;animation:vexp 2.8s ease-in-out infinite}
+.rs{display:flex;align-items:center;gap:12px;padding:12px 14px;margin-bottom:16px;border-radius:18px;color:#fff;border:1px solid #ffffff22;background:radial-gradient(120% 140% at 0% 0%,var(--c2) -50%,transparent 60%),#100c17}
+.rs .bav{width:46px;height:46px;font-size:1.3rem}.rs .bb{font-size:.85rem}.rs .bb b{display:block;font-size:.98rem}
+.rs button{font:inherit;font-weight:800;font-size:.85rem;padding:10px 14px;border-radius:12px;border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--c1),var(--c2))}
+.rs button.x{background:#ffffff14;padding:10px 12px}
 @keyframes vexp{0%,100%{box-shadow:0 0 0 0 #ff174400}50%{box-shadow:0 0 26px -2px #ff174466}}
 /* setup sheet */
 .sheet{position:fixed;inset:0;z-index:900;background:rgba(5,3,10,.62);display:flex;align-items:flex-end;justify-content:center;animation:fade .18s}
@@ -73,10 +77,10 @@ body.ingame .bottom-nav,body.ingame .appbar{display:none}
 .bub.dots i{width:7px;height:7px;border-radius:50%;background:#ffffffaa;animation:bl 1s infinite ease-in-out}.bub.dots i:nth-child(2){animation-delay:.15s}.bub.dots i:nth-child(3){animation-delay:.3s}
 @keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}@keyframes pop{from{opacity:0;transform:translateY(5px) scale(.98)}}
 .bwrap{position:relative;border-radius:14px;padding:6px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 18px 50px -18px var(--c2),0 0 0 1px #ffffff22}
-.board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;border-radius:8px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.sq{position:relative;border:0;padding:0;margin:0;display:grid;place-items:center;background:var(--l);cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
+.board{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));grid-auto-rows:auto;border-radius:8px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sq{position:relative;aspect-ratio:1/1;width:100%;min-width:0;min-height:0;border:0;padding:0;margin:0;display:grid;place-items:center;background:var(--l);cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
 .sq.d{background:var(--d)}
-.sq .pc{font-size:min(9.6vw,50px);line-height:1;transform-origin:center;pointer-events:none;will-change:transform}
+.sq .pc{font-size:min(9.2vw,48px);line-height:1;transform-origin:center;pointer-events:none;will-change:transform}
 .pc.w{color:#fffdf8;text-shadow:0 0 1px #000,0 1px 0 #0009,0 2px 3px #0006,1px 0 0 #0005,-1px 0 0 #0005}
 .pc.b{color:#1c1226;text-shadow:0 0 1px #fff8,0 1px 0 #fff3,0 2px 3px #0005}
 .sq.last::before{content:"";position:absolute;inset:0;background:#ffe45c66}
@@ -116,6 +120,7 @@ body.ingame .bottom-nav,body.ingame .appbar{display:none}
     <div class="g-h"><h1>Play</h1></div>
     <p class="g-sub">Pick a game, pick an opponent. They talk back.</p>
     <div class="g-tabs"><span class="g-tab on"><b>&#9822;&#xFE0E;</b>Chess</span></div>
+    <div id="resume"></div>
     <div class="g-lab">Choose your opponent</div>
     <div class="g-list" id="bots"></div>
   </div>
@@ -142,6 +147,8 @@ body.ingame .bottom-nav,body.ingame .appbar{display:none}
 <script type="module">
 import {requireAuth} from '/gate.js';
 import {mountNav} from '/nav.js';
+import {auth} from '/firebase-init.js';
+import {onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 mountNav();requireAuth();
 
 const $=(s,r=document)=>r.querySelector(s);
@@ -211,6 +218,22 @@ const rec=()=>{try{return JSON.parse(localStorage.getItem(REC_KEY))||{}}catch(e)
 const saveRec=(id,k)=>{try{const r=rec();r[id]=r[id]||{w:0,l:0,d:0};r[id][k]++;localStorage.setItem(REC_KEY,JSON.stringify(r))}catch(e){}};
 const recText=id=>{const r=rec()[id];return r?`${r.w}W \u00b7 ${r.l}L \u00b7 ${r.d}D`:'Not played yet'};
 
+let G=null,worker=null,reqId=0,sayTimer=null,resignTimer=null;
+/* saved game (survives refresh) */
+const GAME_KEY='lumora_chess_game';let UID=null;
+const saveGame=()=>{try{if(!G||G.over||!G.hist.length)return;localStorage.setItem(GAME_KEY,JSON.stringify({uid:UID,bot:G.bot.id,mood:G.mood,my:G.my,flip:G.flip,moves:G.hist.map(h=>h.m)}))}catch(e){}};
+const clearGame=()=>{try{localStorage.removeItem(GAME_KEY)}catch(e){}};
+const loadGame=()=>{try{const g=JSON.parse(localStorage.getItem(GAME_KEY));if(g&&byId[g.bot]&&Array.isArray(g.moves)&&g.moves.length&&(!g.uid||g.uid===UID))return g}catch(e){}return null};
+function renderResume(){
+  const box=$('#resume');box.textContent='';const sv=loadGame();if(!sv)return;
+  const b=byId[sv.bot],c=el('div','rs');themeVars(c,b);
+  const info=el('div','bb');info.innerHTML='<b></b>';info.firstChild.textContent=`Game vs ${b.name}`;info.appendChild(document.createTextNode(`Move ${Math.floor(sv.moves.length/2)+1} \u00b7 ${MOODS[sv.mood].label}`));
+  const go=el('button','','Resume');go.type='button';go.onclick=()=>startGame(b,sv.mood,sv.my===1?'w':'b',sv);
+  const x=el('button','x','Drop');x.type='button';x.setAttribute('aria-label','Abandon saved game');x.onclick=()=>{clearGame();renderResume()};
+  c.append(avatar(b),info,go,x);box.appendChild(c);
+}
+onAuthStateChanged(auth,u=>{UID=u?u.uid:null;if(!G)renderResume()});
+
 /* ---------------- Lobby ---------------- */
 function themeVars(node,b){node.style.setProperty('--c1',b.c1);node.style.setProperty('--c2',b.c2)}
 function avatar(b,cls){
@@ -220,6 +243,7 @@ function avatar(b,cls){
   return a;
 }
 function renderLobby(){
+  renderResume();
   const box=$('#bots');box.textContent='';
   BOTS.forEach(b=>{
     const c=el('button','bc'+(b.evil?' vex':''));c.type='button';themeVars(c,b);
@@ -254,7 +278,6 @@ function closeSetup(){$('#sheet').hidden=true}
 $('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSetup()});
 
 /* ---------------- Game ---------------- */
-let G=null,worker=null,reqId=0,sayTimer=null,resignTimer=null;
 function getWorker(){if(worker)return worker;try{worker=new Worker('/chess-engine.js');worker.onerror=()=>{worker=null}}catch(e){worker=null}return worker}
 function botParams(b,mood){
   let d=b.depth,m=b.margin,bl=b.blunder,ms=b.ms;
@@ -262,10 +285,11 @@ function botParams(b,mood){
   else if(mood==='brutal'){d+=1;m=Math.floor(m/3);bl=0;ms*=1.4}
   return {depth:d,margin:m,blunder:bl,ms:Math.round(ms)};
 }
-function startGame(b,mood,colorChoice){
+function startGame(b,mood,colorChoice,saved){
   const my=colorChoice==='w'?1:colorChoice==='b'?-1:(Math.random()<.5?1:-1);
   G={bot:b,mood,my,pos:new Pos().load(START),hist:[],keys:{},caps:{1:[],'-1':[]},last:null,sel:null,dests:[],over:false,busy:false,anim:null,prev:null,flip:my===-1,idleN:0};
   G.keys[G.pos.key()]=1;
+  if(saved){G.flip=!!saved.flip;for(const m of saved.moves){const p=G.pos,f=mFrom(m),t=mTo(m),mover=p.side,cap=mFlag(m)===1?1:Math.abs(p.b[t]),san=p.san(m);p.make(m);if(cap)G.caps[-mover].push(cap);G.hist.push({san,m,mover});G.last={f,t};const k=p.key();G.keys[k]=(G.keys[k]||0)+1}}else clearGame();
   const arena=$('#game');themeVars(arena,b);arena.style.setProperty('--glow',b.c2+'44');arena.style.setProperty('--glow2',b.c1+'66');
   arena.style.setProperty('--l',b.board[0]);arena.style.setProperty('--d',b.board[1]);
   $('#board').style.setProperty('--l',b.board[0]);$('#board').style.setProperty('--d',b.board[1]);
@@ -275,13 +299,13 @@ function startGame(b,mood,colorChoice){
   $('#gtitle').textContent=`Chess \u00b7 ${MOODS[mood].label}`;
   $('#lobby').hidden=true;$('#game').hidden=false;$('#res').hidden=true;document.body.classList.add('ingame');window.scrollTo(0,0);
   $('#resign').textContent='Resign';$('#resign').disabled=false;
-  render();say('start',500);
-  if(G.pos.side!==G.my)setTimeout(botMove,1400);
+  render();say(saved?'idle':'start',500);
+  if(G.pos.side!==G.my)setTimeout(botMove,saved?1000:1400);
 }
 function leave(){
   reqId++;G=null;clearTimeout(sayTimer);$('#game').hidden=true;$('#res').hidden=true;$('#lobby').hidden=false;document.body.classList.remove('ingame');renderLobby();
 }
-$('#gback').onclick=()=>{if(!G||G.over||G.hist.length<2){leave();return}if($('#gback').dataset.arm){leave();return}$('#gback').dataset.arm='1';$('#bub').textContent='Tap back again to leave. This game will count as unfinished.';setTimeout(()=>delete $('#gback').dataset.arm,3000)};
+$('#gback').onclick=leave;
 $('#gflip').onclick=()=>{if(G){G.flip=!G.flip;render()}};
 $('#rematch').onclick=()=>{if(!G)return;if(!G.over&&G.hist.length>1&&!$('#rematch').dataset.arm){$('#rematch').dataset.arm='1';$('#rematch').textContent='Tap again to restart';setTimeout(()=>{delete $('#rematch').dataset.arm;$('#rematch').textContent='New game'},3000);return}
   delete $('#rematch').dataset.arm;$('#rematch').textContent='New game';reqId++;startGame(G.bot,G.mood,G.over?(G.my===1?'b':'w'):(G.my===1?'w':'b'))};
@@ -361,7 +385,7 @@ function doMove(m,byBot){
   G.hist.push({san,m,mover});G.last={f,t};G.sel=null;G.dests=[];G.anim={f,t};
   const k=p.key();G.keys[k]=(G.keys[k]||0)+1;
   try{navigator.vibrate&&navigator.vibrate(byBot?6:10)}catch(e){}
-  render();
+  render();saveGame();
   const st=p.status(),rep=G.keys[k]>=3;
   if(st==='mate'){finish('mate',mover);return}
   if(st==='stalemate'||st==='fifty'||st==='material'||rep){finish(rep&&!st?'repeat':st);return}
@@ -404,7 +428,7 @@ function botMove(spoke){
 
 /* finish */
 function finish(kind,winnerSide){
-  G.over=true;G.busy=false;clearTimeout(sayTimer);
+  clearGame();G.over=true;G.busy=false;clearTimeout(sayTimer);
   const b=G.bot;let title,why,ev,res;
   if(kind==='mate'){const me=winnerSide===G.my;title=me?'You win!':`${b.name} wins`;why='Checkmate';ev=me?'lose':'win';res=me?'w':'l'}
   else if(kind==='resign'){title=`${b.name} wins`;why='You resigned';ev='resign';res='l'}
