@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Play – Lumora OLVRA</title>
+<meta name="robots" content="noindex">
+<meta name="description" content="Play chess against Lumora's AI personas, from friendly Alex to the ruthless Vex.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icon-180.png"><link rel="manifest" href="/manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/app.css">
+<style>
+#gateScreen{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;text-align:center;padding:28px}
+#gateScreen .card{max-width:320px;padding:30px 26px}
+.g-wrap{max-width:560px;margin:0 auto;padding:6px 18px 30px}
+.g-h{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
+.g-h h1{font-size:1.9rem;margin:0;letter-spacing:-.03em}
+.g-sub{color:var(--dim);margin:2px 0 14px;font-size:.92rem}
+.g-tabs{display:flex;gap:8px;margin:0 0 16px}
+.g-tab{display:flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:800;font-size:.9rem;border:1px solid var(--line);background:var(--bg-2);color:var(--ink)}
+.g-tab.on{background:linear-gradient(135deg,#d61f69,#7b2cbf);color:#fff;border-color:transparent;box-shadow:0 6px 18px -6px #d61f69aa}
+.g-tab b{font-size:1.15rem;line-height:1}
+.g-lab{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);font-weight:800;margin:4px 0 10px}
+.g-list{display:grid;gap:12px}
+.bc{position:relative;display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:14px;border-radius:20px;border:1px solid #ffffff1f;color:#fff;font:inherit;cursor:pointer;overflow:hidden;
+  background:radial-gradient(120% 140% at 0% 0%,var(--c2) -40%,transparent 60%),linear-gradient(135deg,#17131f,#0d0b12);transition:transform .15s,box-shadow .2s}
+.bc::after{content:"";position:absolute;inset:0;background:linear-gradient(105deg,transparent 40%,#ffffff0d 50%,transparent 60%);transform:translateX(-100%);transition:transform .6s}
+.bc:hover::after{transform:translateX(100%)}
+.bc:active{transform:scale(.985)}
+.bc:hover{box-shadow:0 10px 30px -12px var(--c2)}
+.bav{flex:none;width:68px;height:68px;border-radius:50%;display:grid;place-items:center;font-size:1.9rem;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 0 0 2px #ffffff30,0 8px 22px -8px var(--c2);overflow:hidden;position:relative}
+.bav img{width:100%;height:100%;object-fit:cover;display:block}
+.bb{flex:1;min-width:0}
+.bn{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-weight:800;font-size:1.08rem}
+.tag{font-size:.6rem;letter-spacing:.1em;font-weight:800;padding:3px 8px;border-radius:99px;background:#ffffff1c;color:#fff}
+.tag.evil{background:#ff1744;box-shadow:0 0 14px #ff1744aa}
+.bt{font-size:.8rem;color:#ffffffa8;font-weight:600}
+.bq{font-size:.86rem;color:#ffffffd0;margin:6px 0 8px;line-height:1.4;font-style:italic}
+.bm{display:flex;align-items:center;gap:10px;font-size:.74rem;color:#ffffff9a;font-weight:700}
+.pips{display:flex;gap:4px}.pips i{width:16px;height:5px;border-radius:3px;background:#ffffff26}.pips i.on{background:var(--c2);box-shadow:0 0 8px var(--c2)}
+.bc.vex{border-color:#ff174466;animation:vexp 2.8s ease-in-out infinite}
+@keyframes vexp{0%,100%{box-shadow:0 0 0 0 #ff174400}50%{box-shadow:0 0 26px -2px #ff174466}}
+/* setup sheet */
+.sheet{position:fixed;inset:0;z-index:900;background:rgba(5,3,10,.62);display:flex;align-items:flex-end;justify-content:center;animation:fade .18s}
+.sbox{width:100%;max-width:520px;max-height:92dvh;overflow:auto;border-radius:26px 26px 0 0;padding:22px 20px calc(22px + env(safe-area-inset-bottom));color:#fff;
+  background:radial-gradient(100% 60% at 50% 0%,var(--c2) -60%,transparent 70%),#100c17;border:1px solid #ffffff1a;animation:rise .25s cubic-bezier(.2,.8,.2,1)}
+.sbox .bav{width:84px;height:84px;margin:0 auto 10px;font-size:2.3rem}
+.sbox h3{text-align:center;font-size:1.3rem;margin:0}.sbox .bt{text-align:center}
+.sbox .bq{text-align:center;margin:10px 4px 16px;font-size:.92rem}
+.opt{margin:14px 0 6px;font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#ffffff8a;font-weight:800}
+.seg3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.seg3 button{font:inherit;font-weight:700;font-size:.85rem;padding:12px 6px;border-radius:14px;border:1px solid #ffffff22;background:#ffffff0d;color:#fff;cursor:pointer}
+.seg3 button[aria-pressed=true]{background:linear-gradient(135deg,var(--c1),var(--c2));border-color:transparent;box-shadow:0 6px 18px -8px var(--c2)}
+.go{width:100%;margin-top:20px;padding:16px;border-radius:16px;border:0;font:inherit;font-weight:800;font-size:1rem;color:#fff;cursor:pointer;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 10px 26px -10px var(--c2)}
+.go:active{transform:scale(.98)}
+.cancel{display:block;margin:12px auto 0;background:none;border:0;color:#ffffff99;font:inherit;font-weight:700;cursor:pointer;padding:8px}
+@keyframes fade{from{opacity:0}}@keyframes rise{from{transform:translateY(40px);opacity:0}}
+/* game */
+body.ingame{padding-bottom:0;background:#0b0910}
+body.ingame .bottom-nav,body.ingame .appbar{display:none}
+.arena{min-height:100dvh;padding:calc(10px + env(safe-area-inset-top)) 12px calc(12px + env(safe-area-inset-bottom));color:#fff;
+  background:radial-gradient(90% 45% at 50% 0%,var(--glow),transparent 70%),radial-gradient(80% 40% at 50% 100%,var(--glow2),transparent 70%),#0b0910}
+.ar{max-width:520px;margin:0 auto}
+.gtop{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.gtop .t{font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:#ffffff8c;font-weight:800}
+.ibt{width:40px;height:40px;border-radius:50%;border:1px solid #ffffff22;background:#ffffff0f;color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+.prow{display:flex;align-items:center;gap:10px;padding:6px 4px}
+.prow .bav{width:46px;height:46px;font-size:1.3rem}
+.prow .me{background:linear-gradient(135deg,#3a3350,#1d1830)}
+.pnm{font-weight:800;line-height:1.15}.pnm small{display:block;color:#ffffff90;font-weight:600;font-size:.72rem}
+.cap{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.95rem;color:#ffffffc0;letter-spacing:-.18em;min-height:22px;flex-wrap:wrap;justify-content:flex-end}
+.cap em{font-style:normal;letter-spacing:0;font-size:.72rem;font-weight:800;color:#ffffff90;margin-left:8px}
+.bub{position:relative;margin:4px 0 8px 58px;padding:10px 14px;border-radius:6px 18px 18px 18px;background:#ffffff14;border:1px solid #ffffff1f;font-size:.9rem;line-height:1.42;font-weight:600;min-height:42px;animation:pop .22s ease-out}
+.bub.dots{display:flex;gap:5px;align-items:center;width:62px}
+.bub.dots i{width:7px;height:7px;border-radius:50%;background:#ffffffaa;animation:bl 1s infinite ease-in-out}.bub.dots i:nth-child(2){animation-delay:.15s}.bub.dots i:nth-child(3){animation-delay:.3s}
+@keyframes bl{0%,80%,100%{opacity:.25}40%{opacity:1}}@keyframes pop{from{opacity:0;transform:translateY(5px) scale(.98)}}
+.bwrap{position:relative;border-radius:14px;padding:6px;background:linear-gradient(135deg,var(--c1),var(--c2));box-shadow:0 18px 50px -18px var(--c2),0 0 0 1px #ffffff22}
+.board{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;border-radius:8px;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.sq{position:relative;border:0;padding:0;margin:0;display:grid;place-items:center;background:var(--l);cursor:pointer;font:inherit;-webkit-tap-highlight-color:transparent}
+.sq.d{background:var(--d)}
+.sq .pc{font-size:min(9.6vw,50px);line-height:1;transform-origin:center;pointer-events:none;will-change:transform}
+.pc.w{color:#fffdf8;text-shadow:0 0 1px #000,0 1px 0 #0009,0 2px 3px #0006,1px 0 0 #0005,-1px 0 0 #0005}
+.pc.b{color:#1c1226;text-shadow:0 0 1px #fff8,0 1px 0 #fff3,0 2px 3px #0005}
+.sq.last::before{content:"";position:absolute;inset:0;background:#ffe45c66}
+.sq.sel::before{content:"";position:absolute;inset:0;background:#7cf0ff77}
+.sq.chk::before{content:"";position:absolute;inset:0;background:radial-gradient(circle,#ff1744 0,#ff174400 75%)}
+.sq.dot::after{content:"";position:absolute;width:30%;height:30%;border-radius:50%;background:#1c12268c}
+.sq.cp::after{content:"";position:absolute;inset:4%;border-radius:50%;border:4px solid #1c122699;box-sizing:border-box}
+.sq .co{position:absolute;font-size:.6rem;font-weight:800;opacity:.65;pointer-events:none;color:var(--d)}
+.sq.d .co{color:var(--l)}.co.r{top:2px;left:3px}.co.f{bottom:1px;right:3px}
+.pc.mv{position:relative;z-index:5}
+.pr{position:absolute;inset:0;border-radius:14px;background:#0b0910d9;display:flex;align-items:center;justify-content:center;gap:10px;z-index:20;animation:fade .15s}
+.pr button{width:62px;height:62px;border-radius:16px;border:1px solid #ffffff30;background:#ffffff14;color:#fff;font-size:2.2rem;cursor:pointer;line-height:1}
+.ctl{display:flex;gap:10px;margin-top:12px}
+.ctl button{flex:1;padding:13px;border-radius:14px;border:1px solid #ffffff22;background:#ffffff0f;color:#fff;font:inherit;font-weight:800;cursor:pointer}
+.ctl button.danger{color:#ff8da1;border-color:#ff8da144}
+.moves{display:flex;gap:10px;overflow-x:auto;white-space:nowrap;margin-top:12px;padding:8px 4px;font-size:.84rem;font-weight:700;color:#ffffffb0;scrollbar-width:none;min-height:36px}
+.moves::-webkit-scrollbar{display:none}
+.moves b{color:#ffffff60;font-weight:700;margin-right:3px}.moves span.cur{color:#fff}
+.res{position:fixed;inset:0;z-index:950;display:flex;align-items:center;justify-content:center;padding:22px;background:rgba(5,3,10,.72);animation:fade .25s}
+.rbox{width:100%;max-width:340px;text-align:center;padding:26px 22px 20px;border-radius:26px;color:#fff;background:radial-gradient(100% 70% at 50% 0%,var(--c2) -70%,transparent 70%),#120e1a;border:1px solid #ffffff22;animation:rise .35s cubic-bezier(.2,.8,.2,1)}
+.rbox .bav{width:72px;height:72px;margin:0 auto 10px;font-size:2rem}
+.rbox h2{font-size:1.6rem;margin:2px 0 4px;letter-spacing:-.02em}.rbox .why{color:#ffffff9a;font-size:.85rem;font-weight:600}
+.rbox .say{margin:14px 0;padding:12px 14px;border-radius:14px;background:#ffffff12;font-size:.9rem;font-style:italic;line-height:1.4}
+.rbox .rec{font-size:.74rem;color:#ffffff80;font-weight:700;margin-bottom:14px;letter-spacing:.04em}
+.rbox .go{margin-top:0}.rbox .cancel{margin-top:8px}
+@media(prefers-reduced-motion:reduce){.bc.vex{animation:none}}
+</style>
+</head><body>
+<div id="gateScreen" hidden><div class="glass card">
+  <p style="font-weight:800;font-size:1.15rem;margin-bottom:8px">Sign in to play</p>
+  <p class="sub" style="margin-bottom:20px">Create a free Lumora account and challenge the personas.</p>
+  <a class="btn pri" id="gateLink" href="/login?next=/play">Sign in or create account</a>
+</div></div>
+
+<div id="gatedApp" hidden>
+  <div class="g-wrap" id="lobby">
+    <div class="g-h"><h1>Play</h1></div>
+    <p class="g-sub">Pick a game, pick an opponent. They talk back.</p>
+    <div class="g-tabs"><span class="g-tab on"><b>&#9822;&#xFE0E;</b>Chess</span></div>
+    <div class="g-lab">Choose your opponent</div>
+    <div class="g-list" id="bots"></div>
+  </div>
+
+  <div class="arena" id="game" hidden><div class="ar">
+    <div class="gtop">
+      <button class="ibt" id="gback" type="button" aria-label="Leave game"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <div class="t" id="gtitle">Chess</div>
+      <button class="ibt" id="gflip" type="button" aria-label="Flip board"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M7 4L3 8M7 4l4 4M17 20V4M17 20l-4-4M17 20l4-4"/></svg></button>
+    </div>
+    <div class="prow"><div class="bav" id="topav"></div><div class="pnm" id="topnm"></div><div class="cap" id="topcap"></div></div>
+    <div class="bub" id="bub"></div>
+    <div class="bwrap"><div class="board" id="board" role="grid" aria-label="Chess board"></div><div class="pr" id="promo" hidden></div></div>
+    <div class="prow" style="margin-top:6px"><div class="bav me" id="meav">&#128578;</div><div class="pnm" id="menm">You<small id="mesub"></small></div><div class="cap" id="mecap"></div></div>
+    <div class="moves" id="moves" aria-label="Moves"></div>
+    <div class="ctl"><button type="button" id="resign" class="danger">Resign</button><button type="button" id="rematch">New game</button></div>
+  </div></div>
+</div>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true"><div class="sbox" id="sbox"></div></div>
+<div class="res" id="res" hidden role="dialog" aria-modal="true"><div class="rbox" id="rbox"></div></div>
+
+<script src="/chess-engine.js"></script>
+<script type="module">
+import {requireAuth} from '/gate.js';
+import {mountNav} from '/nav.js';
+mountNav();requireAuth();
+
+const $=(s,r=document)=>r.querySelector(s);
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const {Pos,START,sqName,mFrom,mTo,mPromo,mFlag,think,VAL}=window.Chess;
+
+/* ---------------- Opponents ---------------- */
+const BOTS=[
+ {id:'alex',name:'Alex',title:'The Companion',tag:'BEGINNER',emoji:'\u{1F60A}',c1:'#ff9a8b',c2:'#d61f69',board:['#fbe6dc','#d9826c'],level:1,elo:600,depth:1,margin:260,blunder:.22,ms:300,
+  intro:"Hi! I'm still learning, so be nice to me.",
+  say:{start:["Hi! Good luck. I'm kind of new at this!","Yay, a game! May the best one win. Probably you."],
+   take:["Ooh, I got one! Sorry!","Mine now. Hope that's okay!"],lost:["Oh no, my piece! Nice one.","Hey, I liked that one! Well played."],
+   check:["Check! I think? Yes, check!"],checked:["Eek, my king! Let me think..."],
+   blunder:["Wait, can I really take that? Okay!","Hmm, did you mean to do that?"],brilliant:["Wow, how did you see that? Teach me!","That was clever! I didn't see it coming."],
+   idle:["Chess is so fun. Take your time!","Thinking... thinking... please don't be mad if I blunder.","Nice game so far!"],winning:["Am I winning? That can't be right!"],losing:["I think I'm in trouble... but I'm having fun!"],
+   win:["I won?! Wow! You made it close though!"],lose:["You got me! Great game. Rematch?"],draw:["A draw! That's like winning, right?"],resign:["Aw, no way! Good game though."]}},
+ {id:'witty',name:'The Witty One',title:'The Social Genius',tag:'CASUAL',emoji:'\u{1F61C}',c1:'#f7971e',c2:'#ff512f',board:['#fbe8cf','#e08a3a'],level:2,elo:950,depth:2,margin:110,blunder:.07,ms:450,
+  intro:"I'll beat you and make you laugh about it.",
+  say:{start:["Let's play. I'll be gentle. I'm lying, but gently.","Bold of you to challenge me. I love it."],
+   take:["Thanks for the gift! You shouldn't have.","I'll just put that in my collection."],lost:["Okay, okay, calm down, tough guy.","Rude. I was emotionally attached to that."],
+   check:["Check. Just saying hi to your king.","Knock knock. Who's there? Check."],checked:["Wow, so aggressive. I'm into it.","Cute. Watch this."],
+   blunder:["I'm sorry, did you just hang that? Bless.","Is that a sacrifice? Or just vibes?"],brilliant:["Alright, that was actually good. Don't let it go to your head.","Okay, show-off."],
+   idle:["Fun fact: I've never lost. Memory is selective.","I'm 40% strategy, 60% commentary.","Your move. Take your time. Or don't, I'm fabulous either way."],winning:["I'm getting a little comfortable here..."],losing:["This is fine. Everything's fine. I'm laughing."],
+   win:["GG! You were great. I was greater. It's science."],lose:["Fine. You win. I'm not crying, you're crying."],draw:["A draw. The most polite way to say 'we're both awesome'."],resign:["Resigning? Strong move. Very mature."]}},
+ {id:'tutor',name:'The Tutor',title:'The Explainer',tag:'CLUB PLAYER',emoji:'\u{1F4DA}',c1:'#4facfe',c2:'#6a3fb5',board:['#dfe7f5','#5b7fc0'],level:3,elo:1250,depth:3,margin:55,blunder:.02,ms:700,
+  intro:"Let's play, and I'll point out what you can learn.",
+  say:{start:["Good luck! Remember: control the center, develop your pieces.","Ready when you are. Think before every move."],
+   take:["That piece was undefended. Always check your loose pieces.","Captured. A lesson worth remembering."],lost:["Good capture. That was a tactic worth knowing.","Well spotted. I should have protected that."],
+   check:["Check. Always look for forcing moves first.","That's check. Your options are limited now."],checked:["Check noted. Good pressure.","Nice, a forcing move. I'll respond carefully."],
+   blunder:["Careful! That left something undefended. Check what your opponent threatens.","Hmm. Before moving, ask: what does my last move leave hanging?"],brilliant:["Excellent move. You're thinking like a real player.","Very good. That's the kind of move strong players find."],
+   idle:["Tip: knights love the center, rooks love open files.","Take your time. A slow, good move beats a fast, bad one.","Think about your king's safety."],winning:["I have a small edge now, but nothing is decided."],losing:["You're ahead. Convert it carefully."],
+   win:["Good game! Review where your pieces were loose. It'll help a lot."],lose:["Well played! You've earned that win."],draw:["A draw. A fair result between two careful players."],resign:["That's fine. Let's review it, then play again."]}},
+ {id:'sherlock',name:'Sherlock',title:'The Detective',tag:'HARD',emoji:'\u{1F575}\uFE0F',c1:'#0f2027',c2:'#2c97c4',board:['#d4dee3','#4f7385'],level:4,elo:1550,depth:4,margin:20,blunder:0,ms:1100,
+  intro:"Every move you make leaves a clue. I read them all.",
+  say:{start:["The game is afoot. Do try to be unpredictable. You won't manage.","I've already deduced your opening. Proceed."],
+   take:["Elementary. That piece was undefended.","Observe: one fewer defender."],lost:["Interesting. I underestimated you, but only slightly.","A fair exchange of information."],
+   check:["Check. The evidence points to one conclusion.","Check. Your king has few places to hide."],checked:["A forcing line. I anticipated it, mostly.","Hm. Check. Noted."],
+   blunder:["Fascinating. You overlooked the obvious.","You have left a piece unattended. I never do."],brilliant:["Remarkable. I did not deduce that.","Well. That was not in my model of you."],
+   idle:["Your last move betrays a nervous disposition.","Patience. The pattern will reveal itself.","You hesitate before captures. Interesting."],winning:["The case is nearly solved."],losing:["A complication. I do enjoy those."],
+   win:["Case closed. A worthy opponent, nonetheless."],lose:["Well played. I shall review the game most carefully."],draw:["An unsolved case. Rare. I'm intrigued."],resign:["Resignation. A sensible deduction."]}},
+ {id:'jane',name:'Jane',title:'The Observer',tag:'VERY HARD',emoji:'\u{1F50D}',c1:'#232526',c2:'#d61f69',board:['#d9d0df','#5d4a70'],level:4.5,elo:1800,depth:5,margin:8,blunder:0,ms:1500,
+  intro:"I already know how this ends. Do you want to find out anyway?",
+  say:{start:["Hello. You're nervous. That's fine. Everyone is, at first.","Let's play. I'll tell you a secret: I've seen this game before."],
+   take:["Did you think I wouldn't notice?","Thank you. You were never going to keep that."],lost:["Mm. You surprised me. Remember that feeling.","I let you have that. Or did I?"],
+   check:["Check. Breathe.","Your king looks lonely."],checked:["Interesting. You wanted me to see that.","Careful. That was almost clever."],
+   blunder:["You hesitated before that, didn't you?","That wasn't a mistake. That was a confession."],brilliant:["Hm. I didn't see that coming. Now I'm curious about you.","Well. That's not what I expected from you."],
+   idle:["Every move tells me who you are.","Take your time. I'll be here. I'm always here.","You keep looking at the same piece."],winning:["It's almost over. You can feel it, can't you?"],losing:["Oh, you're good. Don't stop now."],
+   win:["I knew. I'm sorry. Ask me about the mistake you made on move six."],lose:["Hm. You really did it. I wonder what else you're hiding."],draw:["A draw. Neither of us blinked. How interesting."],resign:["Leaving so soon? You were doing better than you think."]}},
+ {id:'vex',name:'Vex',title:'The Ruthless',tag:'EVIL',evil:true,emoji:'\u{1F608}',c1:'#2a0010',c2:'#ff1744',board:['#e3c7c3','#7a1f2b'],level:5,elo:2100,depth:7,margin:0,blunder:0,ms:2600,
+  intro:"No mercy. No draws. Bring your best, and I'll still break you.",
+  say:{start:["Another lamb walks in. Sit. Let's begin.","I don't play to win. I play to ruin you."],
+   take:["Mine. Everything on this board will be.","Crushed. One by one."],lost:["Enjoy it. It's the last thing you'll take from me.","You'll pay for that."],
+   check:["Run, little king.","Check. Hear that? That's the sound of your hope breaking."],checked:["Bold. Foolish, but bold.","You dare?"],
+   blunder:["Pathetic. You hand me the game.","Oh, you poor thing. You really missed that."],brilliant:["...Impressive. I'll make you regret it.","A spark. I'll put it out."],
+   idle:["Your defeat is already decided. I'm just taking my time.","Every move you make makes this sweeter.","Tick, tock. Your position is rotting."],winning:["I can smell your fear from here."],losing:["Impossible. This isn't over."],
+   win:["Of course. Come back when you've learned to lose gracefully."],lose:["...You win. This time. I will remember your face."],draw:["A draw? Insulting. We'll finish this."],resign:["Run away. Everyone does. I like it."]}},
+];
+const byId=Object.fromEntries(BOTS.map(b=>[b.id,b]));
+const MOODS={easy:{label:'Go easy',dElo:-250},fair:{label:'Fair fight',dElo:0},brutal:{label:'No mercy',dElo:250}};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const GL={1:'\u265F',2:'\u265E',3:'\u265D',4:'\u265C',5:'\u265B',6:'\u265A'};
+const glyph=t=>GL[t]+'\uFE0E';
+
+/* records */
+const REC_KEY='lumora_chess_rec';
+const rec=()=>{try{return JSON.parse(localStorage.getItem(REC_KEY))||{}}catch(e){return {}}};
+const saveRec=(id,k)=>{try{const r=rec();r[id]=r[id]||{w:0,l:0,d:0};r[id][k]++;localStorage.setItem(REC_KEY,JSON.stringify(r))}catch(e){}};
+const recText=id=>{const r=rec()[id];return r?`${r.w}W \u00b7 ${r.l}L \u00b7 ${r.d}D`:'Not played yet'};
+
+/* ---------------- Lobby ---------------- */
+function themeVars(node,b){node.style.setProperty('--c1',b.c1);node.style.setProperty('--c2',b.c2)}
+function avatar(b,cls){
+  const a=el('div',cls||'bav');themeVars(a,b);
+  const fallback=()=>{a.textContent=b.emoji};
+  if(b.id!=='vex'){const i=new Image();i.alt='';i.decoding='async';i.src=`/.netlify/functions/persona-image?id=${b.id}&v=1`;i.onload=()=>{a.textContent='';a.appendChild(i)};fallback()}else fallback();
+  return a;
+}
+function renderLobby(){
+  const box=$('#bots');box.textContent='';
+  BOTS.forEach(b=>{
+    const c=el('button','bc'+(b.evil?' vex':''));c.type='button';themeVars(c,b);
+    const body=el('div','bb'),nm=el('div','bn',b.name);nm.appendChild(el('span','tag'+(b.evil?' evil':''),b.tag));
+    const pips=el('div','pips');for(let i=1;i<=5;i++){const p=el('i',i<=Math.ceil(b.level)?'on':'');pips.appendChild(p)}
+    const meta=el('div','bm');meta.append(pips,el('span','',`~${b.elo}`),el('span','',recText(b.id)));
+    body.append(nm,el('div','bt',b.title),el('div','bq','\u201C'+b.intro+'\u201D'),meta);
+    c.append(avatar(b),body);c.onclick=()=>openSetup(b);box.appendChild(c);
+  });
+}
+
+/* setup sheet */
+let SET={color:'w',mood:'fair'};
+function openSetup(b){
+  SET={color:'r',mood:b.level<=1?'fair':'fair'};
+  const box=$('#sbox');box.textContent='';themeVars(box,b);
+  const av=avatar(b);const h=el('h3','',b.name);const t=el('div','bt',b.title+' \u00b7 ~'+b.elo);const q=el('div','bq','\u201C'+b.intro+'\u201D');
+  box.append(av,h,t,q);
+  const seg=(label,key,opts)=>{
+    box.appendChild(el('div','opt',label));const g=el('div','seg3');
+    opts.forEach(([v,txt])=>{const x=el('button','',txt);x.type='button';x.setAttribute('aria-pressed',String(SET[key]===v));
+      x.onclick=()=>{SET[key]=v;[...g.children].forEach(y=>y.setAttribute('aria-pressed','false'));x.setAttribute('aria-pressed','true')};g.appendChild(x)});
+    box.appendChild(g);
+  };
+  seg('Play as','color',[['w','White'],['r','Random'],['b','Black']]);
+  seg('Difficulty','mood',[['easy','Go easy'],['fair','Fair fight'],['brutal','No mercy']]);
+  const go=el('button','go','Start game');go.type='button';go.onclick=()=>{closeSetup();startGame(b,SET.mood,SET.color)};
+  const cn=el('button','cancel','Not now');cn.type='button';cn.onclick=closeSetup;
+  box.append(go,cn);$('#sheet').hidden=false;
+}
+function closeSetup(){$('#sheet').hidden=true}
+$('#sheet').addEventListener('click',e=>{if(e.target.id==='sheet')closeSetup()});
+
+/* ---------------- Game ---------------- */
+let G=null,worker=null,reqId=0,sayTimer=null,resignTimer=null;
+function getWorker(){if(worker)return worker;try{worker=new Worker('/chess-engine.js');worker.onerror=()=>{worker=null}}catch(e){worker=null}return worker}
+function botParams(b,mood){
+  let d=b.depth,m=b.margin,bl=b.blunder,ms=b.ms;
+  if(mood==='easy'){d=Math.max(1,d-1);m+=120;bl+=.1;ms*=.6}
+  else if(mood==='brutal'){d+=1;m=Math.floor(m/3);bl=0;ms*=1.4}
+  return {depth:d,margin:m,blunder:bl,ms:Math.round(ms)};
+}
+function startGame(b,mood,colorChoice){
+  const my=colorChoice==='w'?1:colorChoice==='b'?-1:(Math.random()<.5?1:-1);
+  G={bot:b,mood,my,pos:new Pos().load(START),hist:[],keys:{},caps:{1:[],'-1':[]},last:null,sel:null,dests:[],over:false,busy:false,anim:null,prev:null,flip:my===-1,idleN:0};
+  G.keys[G.pos.key()]=1;
+  const arena=$('#game');themeVars(arena,b);arena.style.setProperty('--glow',b.c2+'44');arena.style.setProperty('--glow2',b.c1+'66');
+  arena.style.setProperty('--l',b.board[0]);arena.style.setProperty('--d',b.board[1]);
+  $('#board').style.setProperty('--l',b.board[0]);$('#board').style.setProperty('--d',b.board[1]);
+  const tn=$('#topav');tn.replaceWith(Object.assign(avatar(b,'bav'),{id:'topav'}));
+  $('#topnm').innerHTML='';$('#topnm').append(document.createTextNode(b.name),Object.assign(el('small','',`${b.title} \u00b7 ~${b.elo+MOODS[mood].dElo}`)));
+  $('#mesub').textContent=my===1?'White':'Black';
+  $('#gtitle').textContent=`Chess \u00b7 ${MOODS[mood].label}`;
+  $('#lobby').hidden=true;$('#game').hidden=false;$('#res').hidden=true;document.body.classList.add('ingame');window.scrollTo(0,0);
+  $('#resign').textContent='Resign';$('#resign').disabled=false;
+  render();say('start',500);
+  if(G.pos.side!==G.my)setTimeout(botMove,1400);
+}
+function leave(){
+  reqId++;G=null;clearTimeout(sayTimer);$('#game').hidden=true;$('#res').hidden=true;$('#lobby').hidden=false;document.body.classList.remove('ingame');renderLobby();
+}
+$('#gback').onclick=()=>{if(!G||G.over||G.hist.length<2){leave();return}if($('#gback').dataset.arm){leave();return}$('#gback').dataset.arm='1';$('#bub').textContent='Tap back again to leave. This game will count as unfinished.';setTimeout(()=>delete $('#gback').dataset.arm,3000)};
+$('#gflip').onclick=()=>{if(G){G.flip=!G.flip;render()}};
+$('#rematch').onclick=()=>{if(!G)return;if(!G.over&&G.hist.length>1&&!$('#rematch').dataset.arm){$('#rematch').dataset.arm='1';$('#rematch').textContent='Tap again to restart';setTimeout(()=>{delete $('#rematch').dataset.arm;$('#rematch').textContent='New game'},3000);return}
+  delete $('#rematch').dataset.arm;$('#rematch').textContent='New game';reqId++;startGame(G.bot,G.mood,G.over?(G.my===1?'b':'w'):(G.my===1?'w':'b'))};
+$('#resign').onclick=()=>{if(!G||G.over)return;const r=$('#resign');if(!resignTimer){r.textContent='Tap again to resign';resignTimer=setTimeout(()=>{resignTimer=null;r.textContent='Resign'},3000);return}clearTimeout(resignTimer);resignTimer=null;r.textContent='Resign';finish('resign')};
+
+/* speech */
+function say(ev,delay){
+  if(!G)return;const b=G.bot,lines=(b.say[ev]||b.say.idle);if(!lines)return;
+  const bub=$('#bub');clearTimeout(sayTimer);bub.className='bub dots';bub.innerHTML='<i></i><i></i><i></i>';
+  const g=G;sayTimer=setTimeout(()=>{if(G!==g)return;bub.className='bub';bub.textContent=pick(lines)},(delay||0)+500+Math.random()*500);
+}
+function sayNow(text){const bub=$('#bub');bub.className='bub';bub.textContent=text}
+
+/* rendering */
+const sqEls=[];
+function render(){
+  const board=$('#board'),flip=G.flip;board.textContent='';sqEls.length=0;
+  const checkSq=G.pos.inCheck(G.pos.side)?(G.pos.side===1?G.pos.kw:G.pos.kb):-1;
+  for(let i=0;i<64;i++){
+    const s=flip?63-i:i,r=s>>3,c=s&7,v=G.pos.b[s];
+    const q=el('button','sq'+((r+c)%2?' d':''));q.type='button';q.dataset.s=s;
+    if(G.last&&(s===G.last.f||s===G.last.t))q.classList.add('last');
+    if(G.sel===s)q.classList.add('sel');
+    if(s===checkSq)q.classList.add('chk');
+    const d=G.dests.find(x=>x.t===s);if(d)q.classList.add(v||d.ep?'cp':'dot');
+    if(v){const p=el('span','pc '+(v>0?'w':'b'),glyph(Math.abs(v)));q.appendChild(p)}
+    if(i%8===0)q.appendChild(el('span','co r',String(8-r)));
+    if(i>=56)q.appendChild(el('span','co f','abcdefgh'[c]));
+    q.setAttribute('aria-label',sqName(s)+(v?' '+(v>0?'white ':'black ')+['','pawn','knight','bishop','rook','queen','king'][Math.abs(v)]:''));
+    q.onclick=()=>onSquare(s);board.appendChild(q);sqEls[s]=q;
+  }
+  if(G.anim){const a=G.anim;G.anim=null;const dst=sqEls[a.t],src=sqEls[a.f],pe=dst&&dst.querySelector('.pc');
+    if(pe&&src){const r1=src.getBoundingClientRect(),r2=dst.getBoundingClientRect();pe.classList.add('mv');pe.style.transition='none';pe.style.transform=`translate(${r1.left-r2.left}px,${r1.top-r2.top}px)`;pe.getBoundingClientRect();pe.style.transition='transform .24s cubic-bezier(.2,.8,.2,1)';pe.style.transform='none'}}
+  // captured + material
+  const adv=mat(G.my===1?1:-1);
+  const showCap=(node,color,plus)=>{node.textContent='';G.caps[color].slice().sort((a,b)=>b-a).forEach(t=>{const s=el('span','',glyph(t));node.appendChild(s)});if(plus>0)node.appendChild(el('em','','+'+plus))};
+  showCap($('#mecap'),-G.my,adv); // pieces I captured are the opponent's color
+  showCap($('#topcap'),G.my,-adv);
+  // moves
+  const mv=$('#moves');mv.textContent='';
+  G.hist.forEach((h,i)=>{const sp=el('span',i===G.hist.length-1?'cur':'');if(i%2===0)sp.appendChild(el('b','',Math.floor(i/2)+1+'.'));sp.appendChild(document.createTextNode(h.san));mv.appendChild(sp)});
+  mv.scrollLeft=mv.scrollWidth;
+}
+function mat(side){ // material lead for `side`, from captured lists (captured[color] = pieces of that color that were taken)
+  let me=0,op=0;G.caps[-side].forEach(t=>me+=VAL[t]);G.caps[side].forEach(t=>op+=VAL[t]);return Math.round((me-op)/100);
+}
+
+/* input */
+function onSquare(s){
+  if(!G||G.over||G.busy||G.pos.side!==G.my)return;
+  const p=G.pos,v=p.b[s];
+  if(G.sel!=null){
+    const cand=G.dests.filter(d=>d.t===s);
+    if(cand.length){
+      if(cand.length>1){askPromo(cand);return}
+      play(cand[0].m);return;
+    }
+  }
+  if(v*G.my>0){
+    G.sel=s;G.dests=p.legal().filter(m=>mFrom(m)===s).map(m=>({m,t:mTo(m),ep:mFlag(m)===1}));
+  }else{G.sel=null;G.dests=[]}
+  render();
+}
+function askPromo(cand){
+  const box=$('#promo');box.textContent='';box.hidden=false;
+  [5,4,3,2].forEach(t=>{const m=cand.find(c=>mPromo(c.m)===t).m,b=el('button','',glyph(t));b.type='button';b.setAttribute('aria-label','Promote to '+['','','knight','bishop','rook','queen'][t]);b.style.color=G.my===1?'#fffdf8':'#1c1226';b.style.background=G.my===1?'#3a3350':'#e9e2f2';b.onclick=()=>{box.hidden=true;play(m)};box.appendChild(b)});
+}
+
+/* move execution */
+function play(m){doMove(m,false)}
+function doMove(m,byBot){
+  const p=G.pos,f=mFrom(m),t=mTo(m),fl=mFlag(m),mover=p.side,piece=Math.abs(p.b[f]);
+  const captured=fl===1?1:Math.abs(p.b[t]);
+  const san=p.san(m);
+  p.make(m);
+  if(captured)G.caps[-mover].push(captured);
+  G.hist.push({san,m,mover});G.last={f,t};G.sel=null;G.dests=[];G.anim={f,t};
+  const k=p.key();G.keys[k]=(G.keys[k]||0)+1;
+  try{navigator.vibrate&&navigator.vibrate(byBot?6:10)}catch(e){}
+  render();
+  const st=p.status(),rep=G.keys[k]>=3;
+  if(st==='mate'){finish('mate',mover);return}
+  if(st==='stalemate'||st==='fifty'||st==='material'||rep){finish(rep&&!st?'repeat':st);return}
+  const chk=p.inCheck(p.side);
+  if(!byBot){ // player moved: react, then bot thinks
+    const ev=chk?'checked':captured>=3?'lost':null;
+    if(ev)say(ev,0);
+    G.busy=true;setTimeout(()=>botMove(ev),ev?1400:600+Math.random()*500);
+  }else{
+    G.busy=false;
+    const swing=G.swing||0;let ev=null;
+    if(chk)ev='check';else if(swing>=170)ev='blunder';else if(swing<=-170)ev='brilliant';else if(captured>=2)ev='take';
+    else if(G.hist.length>6&&Math.random()<.3){const sc=G.prev||0;ev=sc>350?'winning':sc<-350?'losing':'idle'}
+    else if(Math.random()<.18)ev='idle';
+    if(ev)say(ev,0);
+    G.swing=0;
+  }
+}
+function botMove(spoke){
+  if(!G||G.over)return;
+  G.busy=true;const g=G,id=++reqId,par=botParams(g.bot,g.mood);
+  const rep={};Object.keys(g.keys).forEach(k=>{if(g.keys[k]>=2)rep[k]=g.keys[k]});
+  const msg={id,fen:g.pos.fen(),rep,...par};
+  const started=Date.now(),minWait=500+Math.random()*600;
+  const done=(r)=>{
+    if(G!==g||id!==reqId||g.over)return;
+    const wait=Math.max(0,minWait-(Date.now()-started));
+    setTimeout(()=>{
+      if(G!==g||id!==reqId||g.over)return;
+      if(!r.move){g.busy=false;return}
+      if(g.prev!=null&&r.depth>0)g.swing=r.score-g.prev; // bot's expectation vs. what the player actually allowed
+      g.prev=r.score;
+      doMove(r.move,true);
+    },wait);
+  };
+  const w=getWorker();
+  if(w){w.onmessage=(e)=>done(e.data);w.postMessage(msg)}
+  else setTimeout(()=>done({...think(msg.fen,msg),id}),30);
+}
+
+/* finish */
+function finish(kind,winnerSide){
+  G.over=true;G.busy=false;clearTimeout(sayTimer);
+  const b=G.bot;let title,why,ev,res;
+  if(kind==='mate'){const me=winnerSide===G.my;title=me?'You win!':`${b.name} wins`;why='Checkmate';ev=me?'lose':'win';res=me?'w':'l'}
+  else if(kind==='resign'){title=`${b.name} wins`;why='You resigned';ev='resign';res='l'}
+  else{title='Draw';why={stalemate:'Stalemate',fifty:'Fifty-move rule',material:'Not enough material',repeat:'Threefold repetition'}[kind]||'Draw';ev='draw';res='d'}
+  saveRec(b.id,res);
+  const line=pick(b.say[ev]||b.say.idle);sayNow(line);
+  setTimeout(()=>{
+    if(!G||!G.over)return;
+    const box=$('#rbox');box.textContent='';themeVars(box,b);
+    box.append(avatar(b),el('h2','',title),el('div','why',why),el('div','say','\u201C'+line+'\u201D'),el('div','rec',`VS ${b.name.toUpperCase()}  \u00b7  ${recText(b.id)}`));
+    const again=el('button','go','Rematch');again.type='button';again.onclick=()=>{$('#res').hidden=true;startGame(b,G.mood,G.my===1?'b':'w')};
+    const other=el('button','cancel','Choose another opponent');other.type='button';other.onclick=leave;
+    const rv=el('button','cancel','View board');rv.type='button';rv.onclick=()=>{$('#res').hidden=true};
+    box.append(again,rv,other);$('#res').hidden=false;
+  },kind==='resign'?400:1300);
+}
+
+renderLobby();
+</script>
+</body></html>
